@@ -8,11 +8,15 @@ import { OrdersModule } from './orders/orders.module';
 import { CartModule } from './cart/cart.module';
 import { WhatsappModule } from './whatsapp/whatsapp.module';
 import { CloudinaryModule } from './cloudinary/cloudinary.module';
-import { PrismaService } from './prisma.service';
+import { PrismaModule } from './prisma/prisma.module';
+
 
 @Module({
-  imports: [AuthModule, UsersModule, ProductsModule, OrdersModule, CartModule, WhatsappModule, CloudinaryModule],
+  imports: [AuthModule, UsersModule, ProductsModule, OrdersModule,
+    CartModule, WhatsappModule,
+    CloudinaryModule, PrismaModule,
+    AuthModule,],
   controllers: [AppController],
-  providers: [AppService,PrismaService],
+  providers: [AppService],
 })
 export class AppModule {}
