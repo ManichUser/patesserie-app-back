@@ -1,0 +1,210 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+
+// Users
+
+model User {
+  id        String    @id @default(uuid())
+  name      String
+  email     String    @unique
+  phone     String
+  password  String
+  role      Role      @default(USER)
+  avatar    String?   // Photo de profil
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  orders    Order[]
+  carts     Cart[]
+  favorites Favorite[]
+
+  @@map("users")
+}
+
+
+// Products
+
+model Product {
+  id          String    @id @default(uuid())
+  name        String
+  description String?
+  price       Float
+  category    String?
+  likes       Int       @default(0)
+  available   Boolean   @default(true)
+  stock       Int?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  images      ProductImage[]
+  cartItems   CartItem[]
+  orderItems  OrderItem[]
+  favorites   Favorite[]
+
+  @@map("products")
+}
+
+// Product images stored on Cloudinary
+model ProductImage {
+  id         String   @id @default(uuid())
+  productId  String
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  url        String
+  publicId   String   // Cloudinary public_id
+  altText    String?
+  order      Int      @default(0)
+  isFeatured Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  @@map("product_images")
+  @@index([productId])
+}
+
+// ----------------------------
+// Shopping carts
+// ----------------------------
+model Cart {
+  id        String      @id @default(uuid())
+  userId    String?
+  user      User?       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status    CartStatus  @default(TEMP)
+  name      String?
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  items     CartItem[]
+  orders    Order[]     
+
+  @@map("carts")
+}
+
+
+model CartItem {
+  id        String   @id @default(uuid())
+  cartId    String
+  cart      Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  quantity  Int      @default(1)
+  note      String?  // Special instructions
+
+  @@unique([cartId, productId])
+  @@map("cart_items")
+}
+
+// ----------------------------
+// Orders
+// ----------------------------
+model Order {
+  id              String      @id @default(uuid())
+  userId          String
+  user            User        @relation(fields: [userId], references: [id])
+  orderNumber     String      @unique
+  deliveryName    String
+  deliveryPhone   String
+  deliveryAddress String?
+  scheduledAt     DateTime?
+  status          OrderStatus @default(PENDING)
+  total           Float
+  paymentMethod   String?
+  isPaid          Boolean     @default(false)
+  whatsappSent    Boolean     @default(false)
+  notes           String?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  cartId          String
+  cart            Cart        @relation(fields: [cartId], references: [id])
+
+  items           OrderItem[]
+
+  @@map("orders")
+}
+
+
+// Items in an order
+model OrderItem {
+  id        String   @id @default(uuid())
+  orderId   String
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product  @relation(fields: [productId], references: [id])
+  quantity  Int
+  price     Float
+  note      String?
+
+  @@map("order_items")
+}
+
+// ----------------------------
+// Favorites
+// ----------------------------
+model Favorite {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, productId])
+  @@map("favorites")
+}
+
+// ----------------------------
+// WhatsApp message scheduler
+// ----------------------------
+model WhatsAppSchedule {
+  id          String          @id @default(uuid())
+  message     String
+  recipients  String[]        // Array of phone numbers
+  scheduledAt DateTime
+  status      ScheduleStatus  @default(PENDING)
+  sentAt      DateTime?
+  error       String?
+  createdAt   DateTime        @default(now())
+
+  @@map("whatsapp_schedules")
+}
+
+// ----------------------------
+// Enums
+// ----------------------------
+enum Role {
+  USER
+  ADMIN
+}
+
+enum CartStatus {
+  TEMP      // Temporary / guest cart
+  SAVED     // Saved cart
+  FINALIZED // Converted to order
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PREPARING
+  READY
+  DELIVERED
+  CANCELLED
+}
+
+enum ScheduleStatus {
+  PENDING
+  SENT
+  FAILED
+}
