@@ -9,10 +9,15 @@ import { CartModule } from './cart/cart.module';
 import { WhatsappModule } from './whatsapp/whatsapp.module';
 import { CloudinaryModule } from './cloudinary/cloudinary.module';
 import { PrismaModule } from './prisma/prisma.module';
+import { ConfigModule } from '@nestjs/config';
 
 
 @Module({
-  imports: [AuthModule, UsersModule, ProductsModule, OrdersModule,
+  imports: [AuthModule,
+    ConfigModule.forRoot({
+      isGlobal: true, 
+    }),
+    UsersModule, ProductsModule, OrdersModule,
     CartModule, WhatsappModule,
     CloudinaryModule, PrismaModule,
     AuthModule,],

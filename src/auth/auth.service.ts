@@ -32,6 +32,7 @@ export class AuthService {
         email: true,
         phone: true,
         role: true,
+        avatar: true,
         createdAt: true,
       },
     });
@@ -69,5 +70,27 @@ export class AuthService {
     const { password, ...userWithoutPassword } = user;
 
     return { user: userWithoutPassword, token };
+  }
+
+  async validateUser(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phone: true,
+        role: true,
+        avatar: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    return user;
   }
 }
