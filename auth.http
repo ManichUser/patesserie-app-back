@@ -1,0 +1,20 @@
+### register 
+POST http://localhost:3001/auth/register
+Content-Type: application/json
+
+{
+    "name": "Testeur",
+    "email": "test@mail.com",
+    "phone": "+237657857548",
+    "password": "password123"
+
+}
+
+### login
+POST http://localhost:3001/auth/login
+Content-Type: application/json
+
+{
+    "email":"test@mail.com",
+    "password":"password123"
+}
