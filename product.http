@@ -1,0 +1,50 @@
+@baseUrl = http://localhost:3001
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI5ZWRkZDE0NS1jNGJjLTQwYzctODE4YS1kOTljN2U4ZmFkZDciLCJlbWFpbCI6InN1cGVyQGFkbWluLmNvbSIsInJvbGUiOiJTVVBFUiIsImlhdCI6MTc2NzYzODE4OSwiZXhwIjoxNzY4MjQyOTg5fQ.xCdn8-8Cat08WxswvB20qS9FGDdBer_DeTk1SD-4yrI
+@productId = PRODUCT_ID_HERE
+
+### 🔐 Créer un produit (ADMIN)
+POST {{baseUrl}}/products
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Gâteau Chocolat",
+  "description": "Délicieux gâteau au chocolat",
+  "price": 4500,
+  "category": "patisserie",
+  "stock": 20,
+  "available": true
+}
+
+### 📦 Récupérer tous les produits
+GET {{baseUrl}}/products
+
+### 📦 Récupérer les produits par catégorie
+GET {{baseUrl}}/products?category=patisserie
+
+### 📦 Récupérer les produits disponibles
+GET {{baseUrl}}/products?available=true
+
+### ⭐ Récupérer les produits les plus likés
+GET {{baseUrl}}/products/most-liked?limit=5
+
+### 🔍 Récupérer un produit par ID
+GET {{baseUrl}}/products/{{productId}}
+
+### ✏️ Mettre à jour un produit (ADMIN)
+PATCH {{baseUrl}}/products/{{productId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "price": 5000,
+  "stock": 15,
+  "available": true
+}
+
+### ❤️ Liker un produit
+POST {{baseUrl}}/products/{{productId}}/like
+
+### 🗑️ Supprimer un produit (ADMIN)
+DELETE {{baseUrl}}/products/{{productId}}
+Authorization: Bearer {{token}}

@@ -11,50 +11,53 @@ import { Role } from 'src/generated/prisma/enums';
 @Controller('products')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class ProductsController {
-    constructor(private productsService: ProductsService) {}
+  constructor(private productsService: ProductsService) {}
 
-    @Post()
-    @Roles(Role.ADMIN)
-    create(@Body() dto: CreateProductDto) {
-      return this.productsService.create(dto);
-    }
-  
-    @Get()
-    @Public()
-    findAll(@Query('category') category?: string, @Query('available') available?: string) {
-      return this.productsService.findAll({
-        category,
-        available: available === 'true',
-      });
-    }
-  
-    @Get('most-liked')
-    @Public()
-    getMostLiked(@Query('limit') limit?: string) {
-      return this.productsService.getMostLiked(limit ? parseInt(limit) : 10);
-    }
-  
-    @Get(':id')
-    @Public()
-    findOne(@Param('id') id: string) {
-      return this.productsService.findOne(id);
-    }
-  
-    @Patch(':id')
-    @Roles(Role.ADMIN)
-    update(@Param('id') id: string, @Body() dto: UpdateProductDto) {
-      return this.productsService.update(id, dto);
-    }
-  
-    @Delete(':id')
-    @Roles(Role.ADMIN)
-    remove(@Param('id') id: string) {
-      return this.productsService.remove(id);
-    }
-  
-    @Post(':id/like')
-    @Public()
-    like(@Param('id') id: string) {
-      return this.productsService.incrementLikes(id);
-    }
+  @Post()
+  @Roles(Role.ADMIN, Role.SUPER)
+  create(@Body() dto: CreateProductDto) {
+    return this.productsService.create(dto);
   }
+
+  @Get()
+  @Public()
+  findAll(
+    @Query('category') category?: string,
+    @Query('available') available?: string,
+  ) {
+    return this.productsService.findAll({
+      category,
+      available: available === 'true',
+    });
+  }
+
+  @Get('most-liked')
+  @Public()
+  getMostLiked(@Query('limit') limit?: string) {
+    return this.productsService.getMostLiked(limit ? parseInt(limit) : 10);
+  }
+
+  @Get(':id')
+  @Public()
+  findOne(@Param('id') id: string) {
+    return this.productsService.findOne(id);
+  }
+
+  @Patch(':id')
+  @Roles(Role.ADMIN, Role.SUPER)
+  update(@Param('id') id: string, @Body() dto: UpdateProductDto) {
+    return this.productsService.update(id, dto);
+  }
+
+  @Delete(':id')
+  @Roles(Role.ADMIN, Role.SUPER)
+  remove(@Param('id') id: string) {
+    return this.productsService.remove(id);
+  }
+
+  @Post(':id/like')
+  @Public()
+  like(@Param('id') id: string) {
+    return this.productsService.incrementLikes(id);
+  }
+}

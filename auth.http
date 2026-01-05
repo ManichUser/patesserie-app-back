@@ -7,6 +7,7 @@ Content-Type: application/json
     "email": "test@mail.com",
     "phone": "+237657857548",
     "password": "password123"
+    
 
 }
 
@@ -15,6 +16,6 @@ POST http://localhost:3001/auth/login
 Content-Type: application/json
 
 {
-    "email":"test@mail.com",
-    "password":"password123"
+    "email":"super@admin.com",
+    "password":"Super123!"
 }
