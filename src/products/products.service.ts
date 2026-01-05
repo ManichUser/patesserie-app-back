@@ -17,11 +17,19 @@ export class ProductsService {
   }
 
   async findAll(params?: { category?: string; available?: boolean }) {
+    // Construire le where de manière conditionnelle
+    const where: any = {};
+    
+    if (params?.category) {
+      where.category = params.category;
+    }
+    
+    if (params?.available !== undefined) {
+      where.available = params.available;
+    }
+
     return this.prisma.product.findMany({
-      where: {
-        category: params?.category,
-        available: params?.available,
-      },
+      where,
       include: {
         images: {
           orderBy: { order: 'asc' },
@@ -55,7 +63,7 @@ export class ProductsService {
   }
 
   async update(id: string, dto: UpdateProductDto) {
-    await this.findOne(id); // Verified existence
+    await this.findOne(id);
 
     return this.prisma.product.update({
       where: { id },

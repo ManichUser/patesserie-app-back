@@ -1,6 +1,6 @@
 @baseUrl = http://localhost:3001
 @token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI5ZWRkZDE0NS1jNGJjLTQwYzctODE4YS1kOTljN2U4ZmFkZDciLCJlbWFpbCI6InN1cGVyQGFkbWluLmNvbSIsInJvbGUiOiJTVVBFUiIsImlhdCI6MTc2NzYzODE4OSwiZXhwIjoxNzY4MjQyOTg5fQ.xCdn8-8Cat08WxswvB20qS9FGDdBer_DeTk1SD-4yrI
-@productId = PRODUCT_ID_HERE
+@productId = 87b74624-c2ad-4755-a109-ec771ae3e9da
 
 ### 🔐 Créer un produit (ADMIN)
 POST {{baseUrl}}/products
@@ -8,9 +8,9 @@ Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
-  "name": "Gâteau Chocolat",
-  "description": "Délicieux gâteau au chocolat",
-  "price": 4500,
+  "name": "Gâteau à la fraise",
+  "description": "Délicieux gâteau ",
+  "price": 8000,
   "category": "patisserie",
   "stock": 20,
   "available": true
