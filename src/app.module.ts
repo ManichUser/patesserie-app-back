@@ -10,6 +10,7 @@ import { WhatsappModule } from './whatsapp/whatsapp.module';
 import { CloudinaryModule } from './cloudinary/cloudinary.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { ConfigModule } from '@nestjs/config';
+import { FavoritesModule } from './favorites/favorites.module';
 
 
 @Module({
@@ -20,7 +21,8 @@ import { ConfigModule } from '@nestjs/config';
     UsersModule, ProductsModule, OrdersModule,
     CartModule, WhatsappModule,
     CloudinaryModule, PrismaModule,
-    AuthModule,],
+    AuthModule,
+    FavoritesModule,],
   controllers: [AppController],
   providers: [AppService],
 })
