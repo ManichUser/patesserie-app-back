@@ -1,0 +1,252 @@
+########################################
+# 📁 cloudinary.http - Tests Upload Images
+########################################
+
+@baseUrl = http://localhost:3001
+@adminToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI5ZWRkZDE0NS1jNGJjLTQwYzctODE4YS1kOTljN2U4ZmFkZDciLCJlbWFpbCI6InN1cGVyQGFkbWluLmNvbSIsInJvbGUiOiJTVVBFUiIsImlhdCI6MTc2Nzc5MjIxOCwiZXhwIjoxNzY4Mzk3MDE4fQ.JtFZer0FuW_RRTLlfYzUtp2rKb8i5GFY3MloX3IB4rA
+@productId =87b74624-c2ad-4755-a109-ec771ae3e9da
+@imageId = patisserie/test/p79sfrsonqci3mu9noin
+
+########################################
+# 📤 Upload général (Cloudinary)
+########################################
+
+### Upload une seule image
+POST {{baseUrl}}/cloudinary/upload
+Authorization: Bearer {{adminToken}}
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary
+
+------WebKitFormBoundary
+Content-Disposition: form-data; name="file"; filename="cake.png"
+Content-Type: image/png
+
+< ./test-images/cake.png
+------WebKitFormBoundary
+Content-Disposition: form-data; name="folder"
+
+patisserie/test
+------WebKitFormBoundary--
+
+### Upload plusieurs images
+POST {{baseUrl}}/cloudinary/upload-multiple
+Authorization: Bearer {{adminToken}}
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary
+
+------WebKitFormBoundary
+Content-Disposition: form-data; name="files"; filename="gateau.png"
+Content-Type: image/png
+
+< ./test-images/gateau.png
+------WebKitFormBoundary
+Content-Disposition: form-data; name="files"; filename="cake.png"
+Content-Type: image/jpeg
+
+< ./test-images/cake.png
+------WebKitFormBoundary
+Content-Disposition: form-data; name="folder"
+
+patisserie/test
+------WebKitFormBoundary--
+
+### Supprimer une image
+DELETE {{baseUrl}}/cloudinary/delete
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "publicId": "patisserie/test/p79sfrsonqci3mu9noin"
+}
+
+### Supprimer plusieurs images
+DELETE {{baseUrl}}/cloudinary/delete-multiple
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "publicIds": [
+    "patisserie/products/abc123",
+    "patisserie/products/def456"
+  ]
+}
+
+
+########################################
+# 🍰 Images de produits
+########################################
+
+### Upload une image sur un produit
+POST {{baseUrl}}/products/{{productId}}/images
+Authorization: Bearer {{adminToken}}
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary
+
+------WebKitFormBoundary
+Content-Disposition: form-data; name="file"; filename="gateau.jpg"
+Content-Type: image/jpeg
+
+< ./test-images/gateau.jpg
+------WebKitFormBoundary
+Content-Disposition: form-data; name="isFeatured"
+
+true
+------WebKitFormBoundary
+Content-Disposition: form-data; name="altText"
+
+Gâteau au chocolat fondant
+------WebKitFormBoundary
+Content-Disposition: form-data; name="order"
+
+0
+------WebKitFormBoundary--
+
+### Upload plusieurs images sur un produit
+POST {{baseUrl}}/products/{{productId}}/images/multiple
+Authorization: Bearer {{adminToken}}
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary
+
+------WebKitFormBoundary
+Content-Disposition: form-data; name="files"; filename="image1.jpg"
+Content-Type: image/jpeg
+
+< ./test-images/image1.jpg
+------WebKitFormBoundary
+Content-Disposition: form-data; name="files"; filename="image2.jpg"
+Content-Type: image/jpeg
+
+< ./test-images/image2.jpg
+------WebKitFormBoundary
+Content-Disposition: form-data; name="files"; filename="image3.jpg"
+Content-Type: image/jpeg
+
+< ./test-images/image3.jpg
+------WebKitFormBoundary--
+
+### Modifier une image de produit
+PATCH {{baseUrl}}/products/images/{{imageId}}
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "isFeatured": true,
+  "altText": "Nouvelle description",
+  "order": 0
+}
+
+### Définir une autre image comme principale
+PATCH {{baseUrl}}/products/images/{{imageId}}
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "isFeatured": true
+}
+
+### Changer l'ordre d'une image
+PATCH {{baseUrl}}/products/images/{{imageId}}
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "order": 2
+}
+
+### Supprimer une image de produit
+DELETE {{baseUrl}}/products/images/{{imageId}}
+Authorization: Bearer {{adminToken}}
+
+
+########################################
+# 🔍 Récupérer les produits avec images
+########################################
+
+### Tous les produits (avec images)
+GET {{baseUrl}}/products
+
+### Un produit avec ses images
+GET {{baseUrl}}/products/{{productId}}
+
+
+########################################
+# 📝 Notes d'utilisation
+########################################
+
+# Pour tester les uploads, tu dois :
+# 
+# 1. Créer un dossier test-images/ à la racine du backend :
+#    mkdir test-images
+#
+# 2. Mettre des images dedans :
+#    cp ~/Downloads/gateau.jpg test-images/
+#
+# 3. Remplacer les variables :
+#    @adminToken = ton-token-admin
+#    @productId = l'id-d-un-produit
+#
+# 4. Cliquer sur "Send Request" dans VSCode
+#
+# Format supportés : JPEG, PNG, WebP
+# Taille max : 5MB
+#
+# Les images sont automatiquement :
+# - Redimensionnées (max 1000x1000)
+# - Optimisées (qualité auto)
+# - Converties au meilleur format
+
+
+########################################
+# 🧪 Test complet : Créer produit + images
+########################################
+
+### 1. Créer un produit
+POST {{baseUrl}}/products
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "name": "Gâteau Test",
+  "description": "Test avec images",
+  "price": 5000,
+  "category": "Gâteaux",
+  "stock": 10
+}
+
+# Copier l'ID du produit créé et remplacer @productId
+
+### 2. Upload l'image principale
+POST {{baseUrl}}/products/{{productId}}/images
+Authorization: Bearer {{adminToken}}
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary
+
+------WebKitFormBoundary
+Content-Disposition: form-data; name="file"; filename="principale.jpg"
+Content-Type: image/jpeg
+
+< ./test-images/principale.jpg
+------WebKitFormBoundary
+Content-Disposition: form-data; name="isFeatured"
+
+true
+------WebKitFormBoundary
+Content-Disposition: form-data; name="altText"
+
+Image principale du gâteau
+------WebKitFormBoundary--
+
+### 3. Upload des images supplémentaires
+POST {{baseUrl}}/products/{{productId}}/images/multiple
+Authorization: Bearer {{adminToken}}
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary
+
+------WebKitFormBoundary
+Content-Disposition: form-data; name="files"; filename="detail1.jpg"
+Content-Type: image/jpeg
+
+< ./test-images/detail1.jpg
+------WebKitFormBoundary
+Content-Disposition: form-data; name="files"; filename="detail2.jpg"
+Content-Type: image/jpeg
+
+< ./test-images/detail2.jpg
+------WebKitFormBoundary--
+
+### 4. Vérifier le produit avec toutes ses images
+GET {{baseUrl}}/products/{{productId}}

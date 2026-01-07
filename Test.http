@@ -1,0 +1,378 @@
+########################################
+# 📁 user.http - Tests API Users
+########################################
+
+@baseUrl = http://localhost:3001
+@token = YOUR_TOKEN_HERE
+@adminToken = YOUR_ADMIN_TOKEN_HERE
+
+### 👤 Récupérer mon profil
+GET {{baseUrl}}/users/profile
+Authorization: Bearer {{token}}
+
+### 📊 Mes statistiques
+GET {{baseUrl}}/users/stats
+Authorization: Bearer {{token}}
+
+### ✏️ Mettre à jour mon profil
+PATCH {{baseUrl}}/users/profile
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Jean Dupont Updated",
+  "phone": "+237699999999",
+  "avatar": "https://example.com/avatar.jpg"
+}
+
+### 🔒 Changer mon mot de passe
+PUT {{baseUrl}}/users/password
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "currentPassword": "oldPassword123",
+  "newPassword": "newPassword123"
+}
+
+### 🗑️ Supprimer mon compte
+DELETE {{baseUrl}}/users/account
+Authorization: Bearer {{token}}
+
+### 👥 Tous les utilisateurs (ADMIN)
+GET {{baseUrl}}/users
+Authorization: Bearer {{adminToken}}
+
+### 👤 Un utilisateur par ID (ADMIN)
+GET {{baseUrl}}/users/user-id-here
+Authorization: Bearer {{adminToken}}
+
+### 🎭 Changer le rôle d'un utilisateur (SUPER)
+PATCH {{baseUrl}}/users/user-id-here/role
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "role": "ADMIN"
+}
+
+### 🗑️ Supprimer un utilisateur (SUPER)
+DELETE {{baseUrl}}/users/user-id-here
+Authorization: Bearer {{adminToken}}
+
+
+########################################
+# 📁 auth.http - Tests API Auth
+########################################
+
+@baseUrl = http://localhost:3001
+
+### 📝 S'inscrire
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "name": "Jean Dupont",
+  "email": "jean@test.cm",
+  "phone": "+237699123456",
+  "password": "password123"
+}
+
+### 🔐 Se connecter
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@patisserie.com",
+  "password": "Admin-patisserie!"
+}
+
+### 🔐 Se connecter (User)
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "jean@test.cm",
+  "password": "password123"
+}
+
+
+########################################
+# 📁 products.http - Tests API Products
+########################################
+
+@baseUrl = http://localhost:3001
+@token = YOUR_TOKEN_HERE
+@adminToken = YOUR_ADMIN_TOKEN_HERE
+
+### 📋 Tous les produits (Public)
+GET {{baseUrl}}/products
+
+### 📋 Produits par catégorie
+GET {{baseUrl}}/products?category=Gâteaux
+
+### 📋 Produits disponibles
+GET {{baseUrl}}/products?available=true
+
+### ⭐ Produits les plus aimés
+GET {{baseUrl}}/products/most-liked?limit=5
+
+### 🔍 Un produit par ID
+GET {{baseUrl}}/products/product-id-here
+
+### ➕ Créer un produit (ADMIN)
+POST {{baseUrl}}/products
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "name": "Éclair au chocolat",
+  "description": "Délicieux éclair garni de crème pâtissière",
+  "price": 1500,
+  "category": "Viennoiseries",
+  "stock": 20,
+  "available": true
+}
+
+### ✏️ Modifier un produit (ADMIN)
+PATCH {{baseUrl}}/products/product-id-here
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "name": "Éclair au chocolat Premium",
+  "price": 2000,
+  "stock": 15
+}
+
+### 🗑️ Supprimer un produit (ADMIN)
+DELETE {{baseUrl}}/products/product-id-here
+Authorization: Bearer {{adminToken}}
+
+### ❤️ Liker un produit (Public)
+POST {{baseUrl}}/products/product-id-here/like
+
+
+########################################
+# 📁 cart.http - Tests API Cart
+########################################
+
+@baseUrl = http://localhost:3001
+@token = YOUR_TOKEN_HERE
+@cartId = YOUR_CART_ID_HERE
+@productId = YOUR_PRODUCT_ID_HERE
+
+### 🛒 Obtenir/Créer un panier (Visiteur)
+GET {{baseUrl}}/cart?cartId={{cartId}}
+
+### 🛒 Obtenir/Créer mon panier (Connecté)
+GET {{baseUrl}}/cart
+Authorization: Bearer {{token}}
+
+### ➕ Ajouter un produit au panier (Visiteur)
+POST {{baseUrl}}/cart/items?cartId={{cartId}}
+Content-Type: application/json
+
+{
+  "productId": "{{productId}}",
+  "quantity": 2,
+  "note": "Sans sucre ajouté"
+}
+
+### ➕ Ajouter un produit au panier (Connecté)
+POST {{baseUrl}}/cart/items
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "productId": "{{productId}}",
+  "quantity": 1,
+  "note": "Avec glaçage chocolat"
+}
+
+### ✏️ Modifier un item du panier
+PATCH {{baseUrl}}/cart/items/cart-item-id-here
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "quantity": 3,
+  "note": "Message: Joyeux anniversaire"
+}
+
+### 🗑️ Supprimer un item du panier
+DELETE {{baseUrl}}/cart/items/cart-item-id-here
+Authorization: Bearer {{token}}
+
+### 🗑️ Vider le panier
+DELETE {{baseUrl}}/cart/cart-id-here/clear
+Authorization: Bearer {{token}}
+
+### 💾 Sauvegarder le panier
+POST {{baseUrl}}/cart/cart-id-here/save
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Mon panier anniversaire"
+}
+
+### 📋 Mes paniers sauvegardés
+GET {{baseUrl}}/cart/user/all
+Authorization: Bearer {{token}}
+
+### 🔀 Fusionner panier temporaire
+POST {{baseUrl}}/cart/merge
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "tempCartId": "temp-cart-id-here"
+}
+
+
+########################################
+# 📁 orders.http - Tests API Orders
+########################################
+
+@baseUrl = http://localhost:3001
+@token = YOUR_TOKEN_HERE
+@adminToken = YOUR_ADMIN_TOKEN_HERE
+@productId = YOUR_PRODUCT_ID_HERE
+
+### 📦 Créer une commande
+POST {{baseUrl}}/orders
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "deliveryName": "Jean Dupont",
+  "deliveryPhone": "+237699123456",
+  "deliveryAddress": "Douala, Akwa, Rue 123",
+  "paymentMethod": "Mobile Money",
+  "items": [
+    {
+      "productId": "{{productId}}",
+      "quantity": 1,
+      "note": "Message: Joyeux anniversaire Marie"
+    }
+  ]
+}
+
+### 📦 Créer une commande programmée
+POST {{baseUrl}}/orders
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "deliveryName": "Sophie Martin",
+  "deliveryPhone": "+237677654321",
+  "deliveryAddress": "Yaoundé, Bastos",
+  "scheduledAt": "2026-01-15T14:00:00Z",
+  "paymentMethod": "Cash",
+  "items": [
+    {
+      "productId": "{{productId}}",
+      "quantity": 2
+    }
+  ]
+}
+
+### 📋 Mes commandes
+GET {{baseUrl}}/orders/my-orders
+Authorization: Bearer {{token}}
+
+### 📋 Toutes les commandes (ADMIN)
+GET {{baseUrl}}/orders
+Authorization: Bearer {{adminToken}}
+
+### 📋 Commandes par statut (ADMIN)
+GET {{baseUrl}}/orders?status=PENDING
+Authorization: Bearer {{adminToken}}
+
+### ⏳ Commandes en attente (ADMIN)
+GET {{baseUrl}}/orders/pending
+Authorization: Bearer {{adminToken}}
+
+### 📅 Commandes programmées (ADMIN)
+GET {{baseUrl}}/orders/scheduled
+Authorization: Bearer {{adminToken}}
+
+### 🔍 Une commande spécifique
+GET {{baseUrl}}/orders/order-id-here
+Authorization: Bearer {{token}}
+
+### ✏️ Modifier le statut d'une commande (ADMIN)
+PATCH {{baseUrl}}/orders/order-id-here/status
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "status": "CONFIRMED",
+  "notes": "Commande confirmée. Prête demain à 10h.",
+  "isPaid": true
+}
+
+### ✏️ Passer en préparation (ADMIN)
+PATCH {{baseUrl}}/orders/order-id-here/status
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "status": "PREPARING",
+  "notes": "Commande en cours de préparation"
+}
+
+### ✏️ Marquer comme prête (ADMIN)
+PATCH {{baseUrl}}/orders/order-id-here/status
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "status": "READY",
+  "notes": "Commande prête pour retrait"
+}
+
+### ✏️ Marquer comme livrée (ADMIN)
+PATCH {{baseUrl}}/orders/order-id-here/status
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "status": "DELIVERED",
+  "notes": "Commande livrée avec succès"
+}
+
+### ❌ Annuler une commande (USER)
+DELETE {{baseUrl}}/orders/order-id-here/cancel
+Authorization: Bearer {{token}}
+
+
+########################################
+# 📁 favorites.http - Tests API Favorites
+########################################
+
+@baseUrl = http://localhost:3001
+@token = YOUR_TOKEN_HERE
+@adminToken = YOUR_ADMIN_TOKEN_HERE
+@productId = YOUR_PRODUCT_ID_HERE
+
+### ❤️ Toggle favorite (Ajouter/Retirer)
+POST {{baseUrl}}/favorites/{{productId}}
+Authorization: Bearer {{token}}
+
+### 📋 Mes favoris
+GET {{baseUrl}}/favorites
+Authorization: Bearer {{token}}
+
+### ❓ Vérifier si un produit est favori
+GET {{baseUrl}}/favorites/{{productId}}
+Authorization: Bearer {{token}}
+
+### 📊 Produits les plus favoris (ADMIN)
+GET {{baseUrl}}/favorites/stats/most-favorited?limit=10
+Authorization: Bearer {{adminToken}}
+
+### 🗑️ Supprimer tous mes favoris
+DELETE {{baseUrl}}/favorites/clear
+Authorization: Bearer {{token}}
