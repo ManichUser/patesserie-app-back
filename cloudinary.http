@@ -2,9 +2,9 @@
 # 📁 cloudinary.http - Tests Upload Images
 ########################################
 
-@baseUrl = http://localhost:3001
-@adminToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI5ZWRkZDE0NS1jNGJjLTQwYzctODE4YS1kOTljN2U4ZmFkZDciLCJlbWFpbCI6InN1cGVyQGFkbWluLmNvbSIsInJvbGUiOiJTVVBFUiIsImlhdCI6MTc2Nzc5MjIxOCwiZXhwIjoxNzY4Mzk3MDE4fQ.JtFZer0FuW_RRTLlfYzUtp2rKb8i5GFY3MloX3IB4rA
-@productId =87b74624-c2ad-4755-a109-ec771ae3e9da
+@baseUrl = http://localhost:3001/api
+@adminToken =eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI5ZWRkZDE0NS1jNGJjLTQwYzctODE4YS1kOTljN2U4ZmFkZDciLCJlbWFpbCI6InN1cGVyQGFkbWluLmNvbSIsInJvbGUiOiJTVVBFUiIsImlhdCI6MTc2NzgyNjQ4MCwiZXhwIjoxNzY4NDMxMjgwfQ.4vkM1qdHcHQIf0GAqnrmdnoeXAumdpJAxzx3C6Df_Bc
+@productId =3f69634f-db14-4b86-b1d5-fd977fc48f1d
 @imageId = patisserie/test/p79sfrsonqci3mu9noin
 
 ########################################
@@ -80,10 +80,10 @@ Authorization: Bearer {{adminToken}}
 Content-Type: multipart/form-data; boundary=----WebKitFormBoundary
 
 ------WebKitFormBoundary
-Content-Disposition: form-data; name="file"; filename="gateau.jpg"
+Content-Disposition: form-data; name="file"; filename="gateau.png"
 Content-Type: image/jpeg
 
-< ./test-images/gateau.jpg
+< ./test-images/gateau.png
 ------WebKitFormBoundary
 Content-Disposition: form-data; name="isFeatured"
 

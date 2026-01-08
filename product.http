@@ -1,5 +1,5 @@
-@baseUrl = http://localhost:3001
-@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI5ZWRkZDE0NS1jNGJjLTQwYzctODE4YS1kOTljN2U4ZmFkZDciLCJlbWFpbCI6InN1cGVyQGFkbWluLmNvbSIsInJvbGUiOiJTVVBFUiIsImlhdCI6MTc2NzYzODE4OSwiZXhwIjoxNzY4MjQyOTg5fQ.xCdn8-8Cat08WxswvB20qS9FGDdBer_DeTk1SD-4yrI
+@baseUrl = http://localhost:3001/api
+@token =eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI5ZWRkZDE0NS1jNGJjLTQwYzctODE4YS1kOTljN2U4ZmFkZDciLCJlbWFpbCI6InN1cGVyQGFkbWluLmNvbSIsInJvbGUiOiJTVVBFUiIsImlhdCI6MTc2NzgyNjQ4MCwiZXhwIjoxNzY4NDMxMjgwfQ.4vkM1qdHcHQIf0GAqnrmdnoeXAumdpJAxzx3C6Df_Bc
 @productId = 87b74624-c2ad-4755-a109-ec771ae3e9da
 
 ### 🔐 Créer un produit (ADMIN)
@@ -8,11 +8,11 @@ Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
-  "name": "Gâteau à la fraise",
-  "description": "Délicieux gâteau ",
-  "price": 8000,
+  "name": "Cake au choclat",
+  "description": "Délicieux  ",
+  "price": 300,
   "category": "patisserie",
-  "stock": 20,
+  "stock": 300,
   "available": true
 }
 
@@ -39,7 +39,7 @@ Content-Type: application/json
 {
   "price": 5000,
   "stock": 15,
-  "available": true
+  "available": false
 }
 
 ### ❤️ Liker un produit
@@ -48,3 +48,27 @@ POST {{baseUrl}}/products/{{productId}}/like
 ### 🗑️ Supprimer un produit (ADMIN)
 DELETE {{baseUrl}}/products/{{productId}}
 Authorization: Bearer {{token}}
+
+### Upluader une image pour un produit (ADMIN)
+POST http://localhost:3001/api/products/3f69634f-db14-4b86-b1d5-fd977fc48f1d/images
+Authorization: Bearer {{token}}
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary
+
+------WebKitFormBoundary
+Content-Disposition: form-data; name="file"; filename="cake.png"
+Content-Type: image/png
+
+< ./test-images/cake.png
+------WebKitFormBoundary
+Content-Disposition: form-data; name="isFeatured"
+
+true
+------WebKitFormBoundary
+Content-Disposition: form-data; name="altText"
+
+Gâteau délicieux
+------WebKitFormBoundary
+Content-Disposition: form-data; name="order"
+
+0
+------WebKitFormBoundary--

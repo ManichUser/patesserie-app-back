@@ -21,7 +21,6 @@ export class CloudinaryService {
       throw new BadRequestException('No file provided');
     }
 
-    // Vérifier le type de fichier
     const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'];
     if (!allowedTypes.includes(file.mimetype)) {
       throw new BadRequestException(
@@ -29,8 +28,7 @@ export class CloudinaryService {
       );
     }
 
-    // Vérifier la taille (max 5MB)
-    const maxSize = 5 * 1024 * 1024; // 5MB
+    const maxSize = 5 * 1024 * 1024;
     if (file.size > maxSize) {
       throw new BadRequestException('File size must be less than 5MB');
     }
@@ -79,14 +77,14 @@ export class CloudinaryService {
     return Promise.all(uploadPromises);
   }
 
-async deleteImage(publicId: string): Promise<{ result: string }> {
+  async deleteImage(publicId: string): Promise<{ result: string }> {
     try {
-        const result = await cloudinary.uploader.destroy(publicId);
-        return result;
+      const result = await cloudinary.uploader.destroy(publicId);
+      return result;
     } catch (error) {
-        throw new BadRequestException(`Delete failed: ${(error as any).message}`);
+      throw new BadRequestException(`Delete failed: ${(error as any).message}`);
     }
-}
+  }
 
   async deleteMultipleImages(publicIds: string[]): Promise<{ result: string }> {
     try {
@@ -97,7 +95,6 @@ async deleteImage(publicId: string): Promise<{ result: string }> {
     }
   }
 
-  // Générer une URL optimisée
   getOptimizedUrl(publicId: string, width?: number, height?: number): string {
     return cloudinary.url(publicId, {
       width,
@@ -108,7 +105,6 @@ async deleteImage(publicId: string): Promise<{ result: string }> {
     });
   }
 
-  // Générer un thumbnail
   getThumbnailUrl(publicId: string): string {
     return cloudinary.url(publicId, {
       width: 200,
