@@ -38,7 +38,6 @@ model User {
 
 
 // Products
-
 model Product {
   id          String    @id @default(uuid())
   name        String
@@ -50,30 +49,39 @@ model Product {
   stock       Int?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
-
-  images      ProductImage[]
+  
+  media       ProductMedia[] 
   cartItems   CartItem[]
   orderItems  OrderItem[]
   favorites   Favorite[]
-
+  
   @@map("products")
 }
 
-// Product images stored on Cloudinary
-model ProductImage {
-  id         String   @id @default(uuid())
+//  ProductMedia
+model ProductMedia {
+  id         String      @id @default(uuid())
   productId  String
-  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  product    Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
   url        String
-  publicId   String   // Cloudinary public_id
+  publicId   String      // Cloudinary public_id
+  type       MediaType   @default(IMAGE) // ← Nouveau champ
   altText    String?
-  order      Int      @default(0)
-  isFeatured Boolean  @default(false)
-  createdAt  DateTime @default(now())
-
-  @@map("product_images")
+  order      Int         @default(0)
+  isFeatured Boolean     @default(false)
+  duration   Int?        // Durée en secondes (pour vidéos)
+  size       Int?        // Taille en bytes
+  format     String?     // mp4, webp, jpg, etc.
+  createdAt  DateTime    @default(now())
+  
+  @@map("product_media")
   @@index([productId])
+  @@index([type])
 }
+
+
+
+
 
 // ----------------------------
 // Shopping carts
@@ -210,4 +218,10 @@ enum ScheduleStatus {
   PENDING
   SENT
   FAILED
+}
+
+// Media des produits
+enum MediaType {
+  IMAGE
+  VIDEO
 }

@@ -1,0 +1,58 @@
+@baseUrl = http://localhost:3001/api
+@adminToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI5ZWRkZDE0NS1jNGJjLTQwYzctODE4YS1kOTljN2U4ZmFkZDciLCJlbWFpbCI6InN1cGVyQGFkbWluLmNvbSIsInJvbGUiOiJTVVBFUiIsImlhdCI6MTc2Nzg1NTM0OCwiZXhwIjoxNzY4NDYwMTQ4fQ.nPTRFxB511CA50tyaFfQ3g1v_4ZBv5Yrxuo50sd8GBY
+@productId = 87b74624-c2ad-4755-a109-ec771ae3e9da
+
+### Upload une image
+POST {{baseUrl}}/products/{{productId}}/media
+Authorization: Bearer {{adminToken}}
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary
+
+------WebKitFormBoundary
+Content-Disposition: form-data; name="file"; filename="gateau.jpg"
+Content-Type: image/png
+
+< ./test-images/gateau.png
+------WebKitFormBoundary
+Content-Disposition: form-data; name="isFeatured"
+
+true
+------WebKitFormBoundary--
+
+### Upload une vidéo
+POST {{baseUrl}}/products/{{productId}}/media
+Authorization: Bearer {{adminToken}}
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary
+
+------WebKitFormBoundary
+Content-Disposition: form-data; name="file"; filename="video.mp4"
+Content-Type: video/mp4
+
+< ./test-videos/video.mp4
+------WebKitFormBoundary
+Content-Disposition: form-data; name="altText"
+
+Vidéo de démonstration du gâteau
+------WebKitFormBoundary--
+
+### Upload multiple (images + vidéos)
+POST {{baseUrl}}/products/{{productId}}/media/multiple
+Authorization: Bearer {{adminToken}}
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary
+
+------WebKitFormBoundary
+Content-Disposition: form-data; name="files"; filename="image1.jpg"
+Content-Type: image/jpeg
+
+< ./test-images/image1.jpg
+------WebKitFormBoundary
+Content-Disposition: form-data; name="files"; filename="video1.mp4"
+Content-Type: video/mp4
+
+< ./test-videos/video1.mp4
+------WebKitFormBoundary--
+
+### Récupérer les media d'un produit
+GET {{baseUrl}}/products/{{productId}}/media
+
+### Produit avec ses media
+GET {{baseUrl}}/products/{{productId}}

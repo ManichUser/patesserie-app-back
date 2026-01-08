@@ -84,7 +84,7 @@ export class OrdersService {
           include: {
             product: {
               include: {
-                images: {
+                media: {
                   where: { isFeatured: true },
                   take: 1,
                 },
@@ -125,7 +125,7 @@ export class OrdersService {
           include: {
             product: {
               include: {
-                images: {
+                media: {
                   where: { isFeatured: true },
                   take: 1,
                 },
@@ -156,7 +156,7 @@ export class OrdersService {
           include: {
             product: {
               include: {
-                images: true,
+                media: true,
               },
             },
           },

@@ -11,7 +11,7 @@ export class ProductsService {
     return this.prisma.product.create({
       data: dto,
       include: {
-        images: true,
+        media: true,
       },
     });
   }
@@ -31,7 +31,7 @@ export class ProductsService {
     return this.prisma.product.findMany({
       where,
       include: {
-        images: {
+        media: {
           orderBy: { order: 'asc' },
         },
         _count: {
@@ -46,7 +46,7 @@ export class ProductsService {
     const product = await this.prisma.product.findUnique({
       where: { id },
       include: {
-        images: {
+        media: {
           orderBy: { order: 'asc' },
         },
         _count: {
@@ -69,7 +69,7 @@ export class ProductsService {
       where: { id },
       data: dto,
       include: {
-        images: true,
+        media: true,
       },
     });
   }
@@ -82,7 +82,7 @@ export class ProductsService {
   async getMostLiked(limit: number = 10) {
     return this.prisma.product.findMany({
       include: {
-        images: {
+        media: {
           where: { isFeatured: true },
           take: 1,
         },

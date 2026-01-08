@@ -19,7 +19,7 @@ export class CartService {
             include: {
               product: {
                 include: {
-                  images: {
+                  media: {
                     where: { isFeatured: true },
                     take: 1,
                   },
@@ -38,7 +38,7 @@ export class CartService {
               include: {
                 product: {
                   include: {
-                    images: {
+                    media: {
                       where: { isFeatured: true },
                       take: 1,
                     },
@@ -65,7 +65,7 @@ export class CartService {
             include: {
               product: {
                 include: {
-                  images: {
+                  media: {
                     where: { isFeatured: true },
                     take: 1,
                   },
@@ -88,7 +88,7 @@ export class CartService {
               include: {
                 product: {
                   include: {
-                    images: {
+                    media: {
                       where: { isFeatured: true },
                       take: 1,
                     },
@@ -201,7 +201,7 @@ export class CartService {
           include: {
             product: {
               include: {
-                images: {
+                media: {
                   where: { isFeatured: true },
                   take: 1,
                 },

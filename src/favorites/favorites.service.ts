@@ -39,7 +39,7 @@ export class FavoritesService {
       include: {
         product: {
           include: {
-            images: {
+            media: {
               where: { isFeatured: true },
               take: 1,
             },
@@ -71,7 +71,7 @@ export class FavoritesService {
   async getMostFavorited(limit: number = 10) {
     return this.prisma.product.findMany({
       include: {
-        images: {
+        media: {
           where: { isFeatured: true },
           take: 1,
         },

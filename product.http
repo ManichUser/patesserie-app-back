@@ -1,6 +1,6 @@
 @baseUrl = http://localhost:3001/api
 @token =eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI5ZWRkZDE0NS1jNGJjLTQwYzctODE4YS1kOTljN2U4ZmFkZDciLCJlbWFpbCI6InN1cGVyQGFkbWluLmNvbSIsInJvbGUiOiJTVVBFUiIsImlhdCI6MTc2NzgyNjQ4MCwiZXhwIjoxNzY4NDMxMjgwfQ.4vkM1qdHcHQIf0GAqnrmdnoeXAumdpJAxzx3C6Df_Bc
-@productId = 87b74624-c2ad-4755-a109-ec771ae3e9da
+@productId =87b74624-c2ad-4755-a109-ec771ae3e9da
 
 ### 🔐 Créer un produit (ADMIN)
 POST {{baseUrl}}/products
@@ -39,13 +39,13 @@ Content-Type: application/json
 {
   "price": 5000,
   "stock": 15,
-  "available": false
+  "available": true
 }
 
-### ❤️ Liker un produit
+###  Liker un produit
 POST {{baseUrl}}/products/{{productId}}/like
 
-### 🗑️ Supprimer un produit (ADMIN)
+###  Supprimer un produit (ADMIN)
 DELETE {{baseUrl}}/products/{{productId}}
 Authorization: Bearer {{token}}
 

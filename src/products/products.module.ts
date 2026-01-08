@@ -1,14 +1,14 @@
 import { Module } from '@nestjs/common';
 import { ProductsService } from './products.service';
 import { ProductsController } from './products.controller';
-import { ProductsImagesController } from './products-images.controller';
+import { ProductsMediaController } from './products-media.controller'; // ← Nouveau
 import { CloudinaryModule } from '../cloudinary/cloudinary.module';
 
 @Module({
   imports: [CloudinaryModule],
   controllers: [
     ProductsController,
-    ProductsImagesController,
+    ProductsMediaController, 
   ],
   providers: [ProductsService],
   exports: [ProductsService],
