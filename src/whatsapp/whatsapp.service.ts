@@ -1,6 +1,7 @@
 // src/whatsapp/whatsapp.service.ts
 
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service'
 import makeWASocket, { 
   DisconnectReason, 
   fetchLatestBaileysVersion, 
@@ -15,6 +16,7 @@ import fs from 'fs-extra';
 
 @Injectable()
 export class WhatsappService implements OnModuleInit {
+
   private logger = new Logger(WhatsappService.name);
   private sock: WASocket | null = null;
   private authFolder = path.join(process.cwd(), 'whatsapp-auth');
@@ -22,6 +24,14 @@ export class WhatsappService implements OnModuleInit {
   private currentPhoneNumber: string | null = null;
   private isInitializing = false;
   private autoReplyService: any = null;
+  private contactsService: any = null;
+  private messagesService: any = null;
+  private followUpService: any = null;
+
+  constructor(
+    private prisma: PrismaService, 
+  ) {}
+
   async onModuleInit() {
     await this.tryAutoReconnect();
   }
@@ -30,7 +40,20 @@ export class WhatsappService implements OnModuleInit {
     this.autoReplyService = autoReplyService;
     this.logger.log('✅ Service de réponses automatiques activé');
   }
+ setContactsService(contactsService: any) {
+    this.contactsService = contactsService;
+    this.logger.log('✅ Service de contacts activé');
+  }
 
+  setMessagesService(messagesService: any) {
+    this.messagesService = messagesService;
+    this.logger.log('✅ Service de messages activé');
+  }
+
+  setFollowUpService(followUpService: any) {
+    this.followUpService = followUpService;
+    this.logger.log('✅ Service de suivi activé');
+  }
   private async tryAutoReconnect() {
     try {
       const { state } = await useMultiFileAuthState(this.authFolder);
@@ -129,28 +152,97 @@ export class WhatsappService implements OnModuleInit {
         if (!text) return;
   
         const senderJid = message.key.remoteJid;
-        
+        const messageId = message.key.id || '';
+        const isGroup = senderJid?.includes('@g.us');
+
         this.logger.log(`📨 Message de ${senderJid}: ${text}`);
   
         // ✅ Chercher une réponse automatique
-        if (this.autoReplyService) {
-          try {
-            const reply = await this.autoReplyService.findMatchingReply(text);
+        // if (this.autoReplyService) {
+        //   try {
+        //     const reply = await this.autoReplyService.findMatchingReply(text);
             
-            if (reply && senderJid) {
-              // Envoyer la réponse automatique
-              await delay(1000); // Délai pour paraître plus naturel
+        //     if (reply && senderJid) {
+        //       // Envoyer la réponse automatique
+        //       await delay(1000); // Délai pour paraître plus naturel
               
-              await this.sock!.sendMessage(senderJid, {
-                text: reply,
-              });
+        //       await this.sock!.sendMessage(senderJid, {
+        //         text: reply,
+        //       });
               
-              this.logger.log(`🤖 Réponse automatique envoyée à ${senderJid}`);
+        //       this.logger.log(`🤖 Réponse automatique envoyée à ${senderJid}`);
+        //     }
+        //   } catch (error) {
+        //     this.logger.error('❌ Erreur réponse automatique:', error);
+        //   }
+        // }
+             // ✅ Enregistrer le contact
+             if (this.contactsService && senderJid) {
+              try {
+                const phone = senderJid.split('@')[0];
+                const pushName = (message as any).pushName;
+                
+                await this.contactsService.upsertContact({
+                  jid: senderJid,
+                  phone,
+                  pushName,
+                });
+              } catch (error) {
+                this.logger.error('❌ Erreur enregistrement contact:', error);
+              }
             }
+        // ✅ Enregistrer le message dans l'historique
+        if (this.messagesService && senderJid && text) {
+          try {
+            await this.messagesService.saveMessage({
+              messageId,
+              conversationId: senderJid,
+              contactJid: senderJid,
+              type: 'TEXT',
+              content: text,
+              direction: 'INCOMING',
+              isFromMe: false,
+              timestamp: new Date(),
+            });
           } catch (error) {
-            this.logger.error('❌ Erreur réponse automatique:', error);
+            this.logger.error('❌ Erreur enregistrement message:', error);
           }
         }
+           // ✅ Chercher une réponse automatique (seulement pour les messages privés)
+           if (this.autoReplyService && !isGroup && text) {
+            try {
+              const reply = await this.autoReplyService.findMatchingReply(text);
+              
+              if (reply && senderJid) {
+                await delay(1000);
+                
+                await this.sock!.sendMessage(senderJid, {
+                  text: reply,
+                });
+                
+                this.logger.log(`🤖 Réponse automatique envoyée à ${senderJid}`);
+  
+                // ✅ Enregistrer la réponse dans l'historique
+                if (this.messagesService) {
+                  await this.messagesService.saveMessage({
+                    messageId: `auto-${Date.now()}`,
+                    conversationId: senderJid,
+                    contactJid: senderJid,
+                    type: 'TEXT',
+                    content: reply,
+                    direction: 'OUTGOING',
+                    isFromMe: true,
+                    isAutoReply: true,
+                    timestamp: new Date(),
+                  });
+                }
+              }
+            } catch (error) {
+              this.logger.error('❌ Erreur réponse automatique:', error);
+            }
+          }
+
+        
       });
   
     } catch (error) {
@@ -466,7 +558,112 @@ async sendVideoFromUrl(to: string, videoUrl: string, caption?: string) {
       throw error;
     }
   }
+/**
+ * ✅ Envoyer une notification de nouvelle commande
+ */
+async sendOrderNotification(orderId: string): Promise<void> {
+  const order = await this.prisma.order.findUnique({
+    where: { id: orderId },
+    include: {
+      items: {
+        include: {
+          product: true,
+        },
+      },
+      user: true,
+    },
+  });
 
+  if (!order) {
+    throw new BadRequestException('Commande non trouvée');
+  }
+
+  const itemsList = order.items
+    .map((item) => `• ${item.product.name} x${item.quantity} (${item.price} FCFA)`)
+    .join('\n');
+
+  const message = `
+🎂 *Nouvelle Commande #${order.orderNumber}*
+
+👤 Client: ${order.user.name}
+📞 Téléphone: ${order.deliveryPhone}
+📍 Adresse: ${order.deliveryAddress || 'Non spécifiée'}
+
+📦 *Articles:*
+${itemsList}
+
+💰 *Total: ${order.total} FCFA*
+
+${order.scheduledAt ? `📅 Livraison prévue: ${new Date(order.scheduledAt).toLocaleString('fr-FR')}` : ''}
+
+${order.notes ? `📝 Notes: ${order.notes}` : ''}
+  `.trim();
+
+  // Envoyer à la pâtissière (numéro dans env ou config)
+  const adminPhone = process.env.ADMIN_WHATSAPP_NUMBER;
+  
+  if (!adminPhone) {
+    throw new BadRequestException('ADMIN_WHATSAPP_NUMBER non configuré dans .env');
+  }
+
+  await this.sendMessage(adminPhone, message);
+
+  // Marquer comme envoyé
+  await this.prisma.order.update({
+    where: { id: orderId },
+    data: { whatsappSent: true },
+  });
+
+  this.logger.log(`✅ Notification de commande ${order.orderNumber} envoyée`);
+}
+
+/**
+ * ✅ Envoyer une notification de mise à jour de statut
+ */
+async sendOrderStatusUpdate(orderId: string, newStatus: string): Promise<void> {
+  const order = await this.prisma.order.findUnique({
+    where: { id: orderId },
+    include: {
+      user: true,
+    },
+  });
+
+  if (!order) {
+    throw new BadRequestException('Commande non trouvée');
+  }
+
+  const statusMessages = {
+    CONFIRMED: '✅ Votre commande a été confirmée !',
+    PREPARING: '👩‍🍳 Votre commande est en préparation...',
+    READY: '🎉 Votre commande est prête ! Vous pouvez venir la récupérer.',
+    DELIVERED: '✅ Commande livrée ! Merci pour votre confiance 🙏',
+    CANCELLED: '❌ Votre commande a été annulée.',
+  };
+
+  const statusEmoji = {
+    CONFIRMED: '✅',
+    PREPARING: '👩‍🍳',
+    READY: '🎉',
+    DELIVERED: '✅',
+    CANCELLED: '❌',
+  };
+
+  const message = `
+${statusEmoji[newStatus] || '📦'} *Mise à jour - Commande #${order.orderNumber}*
+
+${statusMessages[newStatus] || `Statut: ${newStatus}`}
+
+💰 Montant: ${order.total} FCFA
+
+${order.scheduledAt ? `📅 Livraison prévue: ${new Date(order.scheduledAt).toLocaleString('fr-FR')}` : ''}
+
+Des questions ? Répondez à ce message ! 😊
+  `.trim();
+
+  await this.sendMessage(order.deliveryPhone, message);
+
+  this.logger.log(`✅ Notification de statut ${newStatus} envoyée au client ${order.deliveryPhone}`);
+}
 
   async disconnect() {
     if (this.sock) {

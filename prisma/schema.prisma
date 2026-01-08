@@ -240,6 +240,173 @@ model AutoReply {
   @@index([isActive])
 }
 
+// ============================================
+// CONTACTS WHATSAPP (CRM)
+// ============================================
+model WhatsAppContact {
+  id              String   @id @default(uuid())
+  jid             String   @unique // ID WhatsApp (ex: 237657857548@s.whatsapp.net)
+  name            String?
+  phone           String
+  pushName        String?  // Nom affiché sur WhatsApp
+  
+  // Données business
+  tags            String[] // ["vip", "client-regulier", "prospect"]
+  notes           String?  @db.Text
+  totalOrders     Int      @default(0)
+  totalSpent      Float    @default(0)
+  lastOrderDate   DateTime?
+  
+  // Engagement
+  firstMessageDate DateTime?
+  lastMessageDate  DateTime?
+  messageCount     Int      @default(0)
+  isBlocked        Boolean  @default(false)
+  isFavorite       Boolean  @default(false)
+  
+  // Segmentation
+  segment         CustomerSegment @default(PROSPECT)
+  source          String?  // "facebook", "referral", "walk-in", "whatsapp"
+  
+  // Avatar
+  avatarUrl       String?
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  messages        Message[]
+  followUps       FollowUp[]
+  
+  @@map("whatsapp_contacts")
+  @@index([jid])
+  @@index([phone])
+  @@index([segment])
+  @@index([lastMessageDate])
+}
+
+
+// ============================================
+// HISTORIQUE DES CONVERSATIONS
+// ============================================
+model Message {
+  id              String   @id @default(uuid())
+  
+  // Identifiants WhatsApp
+  messageId       String   @unique // ID du message WhatsApp
+  conversationId  String   // ID de la conversation (jid)
+  
+  // Contact
+  contactId       String
+  contact         WhatsAppContact @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  
+  // Contenu
+  type            MessageType
+  content         String?  @db.Text
+  caption         String?
+  mediaUrl        String?  // URL du média (image, vidéo, audio)
+  mediaSize       Int?     // Taille en bytes
+  mediaMimeType   String?
+  
+  // Direction
+  direction       MessageDirection
+  isFromMe        Boolean
+  
+  // Statut
+  status          MessageStatus @default(SENT)
+  readAt          DateTime?
+  deliveredAt     DateTime?
+  
+  // Métadonnées
+  isAutoReply     Boolean  @default(false)
+  autoReplyId     String?  // ID de la règle de réponse automatique utilisée
+  
+  // Contexte
+  quotedMessageId String?  // Si c'est une réponse à un message
+  isForwarded     Boolean  @default(false)
+  
+  timestamp       DateTime @default(now())
+  createdAt       DateTime @default(now())
+  
+  @@map("messages")
+  @@index([contactId])
+  @@index([conversationId])
+  @@index([timestamp])
+  @@index([direction])
+  @@index([isAutoReply])
+}
+
+
+// ============================================
+// MESSAGES DE SUIVI AUTOMATIQUES
+// ============================================
+model FollowUpTemplate {
+  id          String   @id @default(uuid())
+  name        String   // Ex: "Confirmation commande"
+  description String?
+  
+  // Déclencheur
+  trigger     FollowUpTrigger
+  
+  // Délai
+  delayDays   Int      @default(0)
+  delayHours  Int      @default(0)
+  delayMinutes Int     @default(0)
+  
+  // Contenu
+  message     String   @db.Text
+  mediaUrl    String?
+  mediaType   WhatsAppMessageType?
+  
+  // Conditions
+  conditions  Json?    // Conditions avancées (JSON)
+  
+  // Statut
+  isActive    Boolean  @default(true)
+  priority    Int      @default(0)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  followUps   FollowUp[]
+  
+  @@map("follow_up_templates")
+  @@index([trigger])
+  @@index([isActive])
+}
+
+
+
+model FollowUp {
+  id          String   @id @default(uuid())
+  
+  // Lien avec le contact
+  contactId   String
+  contact     WhatsAppContact @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  
+  // Template utilisé
+  templateId  String
+  template    FollowUpTemplate @relation(fields: [templateId], references: [id])
+  
+  // Programmation
+  scheduledAt DateTime
+  
+  // Statut
+  status      FollowUpStatus @default(PENDING)
+  sentAt      DateTime?
+  error       String?
+  
+  // Métadonnées
+  metadata    Json?    // Données contextuelles (orderId, etc.)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@map("follow_ups")
+  @@index([contactId])
+  @@index([templateId])
+  @@index([scheduledAt, status])
+}
+
 
 
 // ----------------------------
@@ -249,6 +416,57 @@ enum Role {
   USER
   ADMIN
   SUPER
+}
+
+enum FollowUpTrigger {
+  AFTER_ORDER          // X jours après une commande
+  AFTER_PAYMENT        // X heures après un paiement
+  AFTER_DELIVERY       // X jours après une livraison
+  AFTER_FIRST_MESSAGE  // X jours après le 1er message
+  AFTER_LAST_MESSAGE   // X jours après le dernier message
+  INACTIVITY           // X jours d'inactivité
+  BIRTHDAY             // Jour d'anniversaire
+  CUSTOM               // Personnalisé
+}
+
+enum MessageType {
+  TEXT
+  IMAGE
+  VIDEO
+  AUDIO
+  DOCUMENT
+  STICKER
+  LOCATION
+  CONTACT
+  POLL
+}
+
+enum FollowUpStatus {
+  PENDING
+  SENT
+  FAILED
+  CANCELLED
+}
+
+enum MessageDirection {
+  INCOMING  // Message reçu
+  OUTGOING  // Message envoyé
+}
+
+enum MessageStatus {
+  PENDING
+  SENT
+  DELIVERED
+  READ
+  FAILED
+}
+enum CustomerSegment {
+  PROSPECT      // Jamais commandé
+  NEW           // 1ère commande
+  REGULAR       // 2-5 commandes
+  VIP           // 5+ commandes ou >50k FCFA
+  INACTIVE      // Pas de commande depuis 30+ jours
+  BLOCKED       // Bloqué
 }
 
 enum CartStatus {

@@ -2,6 +2,23 @@
 @token =eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI5ZWRkZDE0NS1jNGJjLTQwYzctODE4YS1kOTljN2U4ZmFkZDciLCJlbWFpbCI6InN1cGVyQGFkbWluLmNvbSIsInJvbGUiOiJTVVBFUiIsImlhdCI6MTc2NzgyNjQ4MCwiZXhwIjoxNzY4NDMxMjgwfQ.4vkM1qdHcHQIf0GAqnrmdnoeXAumdpJAxzx3C6Df_Bc
 @productId =87b74624-c2ad-4755-a109-ec771ae3e9da
 
+### orders
+POST http://localhost:3001/api/orders
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "deliveryName": "Test Client",
+  "deliveryPhone": "237657857548",
+  "deliveryAddress": "Douala, Akwa",
+  "items": [
+    {
+      "productId": "87b74624-c2ad-4755-a109-ec771ae3e9da",
+      "quantity": 1
+    }
+  ]
+}
+
 ### 🔐 Créer un produit (ADMIN)
 POST {{baseUrl}}/products
 Authorization: Bearer {{token}}

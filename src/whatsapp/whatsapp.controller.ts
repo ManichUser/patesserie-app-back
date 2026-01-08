@@ -7,9 +7,12 @@ import {
     Delete, 
     Body, 
     HttpException, 
-    HttpStatus 
+    HttpStatus, 
+    Param
   } from '@nestjs/common';
   import { WhatsappService } from './whatsapp.service';
+import { Roles } from 'src/auth/decorators/roles.decorator';
+import { Role } from 'src/generated/prisma/enums';
   
   // Helper pour extraire le message d'erreur
   function getErrorMessage(error: unknown): string {
@@ -260,6 +263,35 @@ import {
       );
     }
   }
+  /**
+ * ✅ Envoyer notification de nouvelle commande
+ */
+@Post('notify-order/:orderId')
+@Roles(Role.ADMIN, Role.SUPER)
+async notifyOrder(@Param('orderId') orderId: string) {
+  await this.whatsappService.sendOrderNotification(orderId);
+  return { 
+    message: 'Notification de commande envoyée avec succès',
+    orderId 
+  };
+}
+
+/**
+ * ✅ Notifier le client d'un changement de statut
+ */
+@Post('notify-status/:orderId')
+@Roles(Role.ADMIN, Role.SUPER)
+async notifyStatus(
+  @Param('orderId') orderId: string,
+  @Body('status') status: string,
+) {
+  await this.whatsappService.sendOrderStatusUpdate(orderId, status);
+  return { 
+    message: 'Notification de statut envoyée au client',
+    orderId,
+    status 
+  };
+}
 
     /**
      * DELETE /whatsapp/disconnect
