@@ -224,6 +224,24 @@ model WhatsAppGroup {
 }
 
 
+model AutoReply {
+  id          String   @id @default(uuid())
+  keyword     String   @unique // Mot-clé déclencheur (ex: "prix", "horaires")
+  response    String   @db.Text // Réponse automatique
+  isActive    Boolean  @default(true)
+  matchType   MatchType @default(CONTAINS) // Type de correspondance
+  priority    Int      @default(0) // Priorité (0 = basse, 10 = haute)
+  usageCount  Int      @default(0) // Nombre de fois utilisé
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("auto_replies")
+  @@index([keyword])
+  @@index([isActive])
+}
+
+
+
 // ----------------------------
 // Enums
 // ----------------------------
@@ -264,7 +282,13 @@ enum WhatsAppMessageType {
   VIDEO
   STATUS
 }
-
+enum MatchType {
+  EXACT       // Correspondance exacte (ex: "prix")
+  CONTAINS    // Contient le mot (ex: "quel est le prix")
+  STARTS_WITH // Commence par (ex: "prix...")
+  ENDS_WITH   // Finit par (ex: "...prix")
+  REGEX       // Expression régulière
+}
 
 // Media des produits
 enum MediaType {

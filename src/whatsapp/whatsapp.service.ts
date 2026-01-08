@@ -21,15 +21,20 @@ export class WhatsappService implements OnModuleInit {
   private connectionStatus: 'disconnected' | 'connecting' | 'connected' = 'disconnected';
   private currentPhoneNumber: string | null = null;
   private isInitializing = false;
-
+  private autoReplyService: any = null;
   async onModuleInit() {
     await this.tryAutoReconnect();
+  }
+
+  setAutoReplyService(autoReplyService: any) {
+    this.autoReplyService = autoReplyService;
+    this.logger.log('✅ Service de réponses automatiques activé');
   }
 
   private async tryAutoReconnect() {
     try {
       const { state } = await useMultiFileAuthState(this.authFolder);
-      
+
       if (state.creds.registered) {
         this.logger.log('🔄 Reconnexion automatique à WhatsApp...');
         await this.initSocket();
@@ -57,13 +62,13 @@ export class WhatsappService implements OnModuleInit {
       this.logger.warn('⚠️ Initialisation déjà en cours...');
       return;
     }
-
+  
     this.isInitializing = true;
-
+  
     try {
       const { state, saveCreds } = await useMultiFileAuthState(this.authFolder);
       const { version } = await fetchLatestBaileysVersion();
-
+  
       this.sock = makeWASocket({
         version,
         logger: P({ level: 'silent' }) as any,
@@ -72,14 +77,13 @@ export class WhatsappService implements OnModuleInit {
         auth: state,
         syncFullHistory: false,
       });
-
       this.sock.ev.on('creds.update', saveCreds);
-
+  
       this.sock.ev.on('connection.update', async (update) => {
         const { connection, lastDisconnect } = update;
         
         this.logger.debug(`Connection update: ${connection}`);
-
+  
         if (connection === 'close') {
           const statusCode = (lastDisconnect?.error as any)?.output?.statusCode;
           const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
@@ -87,7 +91,7 @@ export class WhatsappService implements OnModuleInit {
           this.logger.warn(`❌ WhatsApp déconnecté (code: ${statusCode})`);
           this.connectionStatus = 'disconnected';
           this.isInitializing = false;
-
+  
           if (statusCode === 401 || statusCode === DisconnectReason.loggedOut) {
             this.logger.error('🚫 Session invalide - Nettoyage...');
             await this.cleanAuthFolder();
@@ -107,16 +111,48 @@ export class WhatsappService implements OnModuleInit {
           this.connectionStatus = 'connecting';
         }
       });
-
+  
+      // ✅ Écouter les messages entrants et traiter les réponses automatiques
       this.sock.ev.on('messages.upsert', async (m) => {
         const message = m.messages[0];
-        if (!message.key.fromMe && m.type === 'notify') {
-          const text = message.message?.conversation || 
-                       message.message?.extendedTextMessage?.text || '';
-          this.logger.log(`📨 Message de ${message.key.remoteJid}: ${text}`);
+        
+        // Ignorer ses propres messages
+        if (message.key.fromMe) return;
+        
+        // Ignorer les notifications
+        if (m.type !== 'notify') return;
+  
+        // Extraire le texte du message
+        const text = message.message?.conversation || 
+                     message.message?.extendedTextMessage?.text || '';
+        
+        if (!text) return;
+  
+        const senderJid = message.key.remoteJid;
+        
+        this.logger.log(`📨 Message de ${senderJid}: ${text}`);
+  
+        // ✅ Chercher une réponse automatique
+        if (this.autoReplyService) {
+          try {
+            const reply = await this.autoReplyService.findMatchingReply(text);
+            
+            if (reply && senderJid) {
+              // Envoyer la réponse automatique
+              await delay(1000); // Délai pour paraître plus naturel
+              
+              await this.sock!.sendMessage(senderJid, {
+                text: reply,
+              });
+              
+              this.logger.log(`🤖 Réponse automatique envoyée à ${senderJid}`);
+            }
+          } catch (error) {
+            this.logger.error('❌ Erreur réponse automatique:', error);
+          }
         }
       });
-
+  
     } catch (error) {
       this.logger.error('❌ Erreur initialisation:', error);
       this.connectionStatus = 'disconnected';
@@ -124,7 +160,7 @@ export class WhatsappService implements OnModuleInit {
       throw error;
     }
   }
-
+  
   async connect(phoneNumber: string): Promise<string> {
     if (this.connectionStatus === 'connected') {
       throw new Error('WhatsApp déjà connecté');
@@ -252,7 +288,7 @@ export class WhatsappService implements OnModuleInit {
   }
 
   /**
-   * ✅ Envoyer une image depuis une URL
+   *  Envoyer une image depuis une URL
    */
   async sendImageFromUrl(to: string, imageUrl: string, caption?: string) {
     // Télécharger l'image
@@ -430,6 +466,7 @@ async sendVideoFromUrl(to: string, videoUrl: string, caption?: string) {
       throw error;
     }
   }
+
 
   async disconnect() {
     if (this.sock) {
