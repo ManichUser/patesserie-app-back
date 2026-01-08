@@ -1,6 +1,7 @@
 @baseUrl = http://localhost:3001/api
 @token =eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI5ZWRkZDE0NS1jNGJjLTQwYzctODE4YS1kOTljN2U4ZmFkZDciLCJlbWFpbCI6InN1cGVyQGFkbWluLmNvbSIsInJvbGUiOiJTVVBFUiIsImlhdCI6MTc2NzgyNjQ4MCwiZXhwIjoxNzY4NDMxMjgwfQ.4vkM1qdHcHQIf0GAqnrmdnoeXAumdpJAxzx3C6Df_Bc
 @productId =87b74624-c2ad-4755-a109-ec771ae3e9da
+@ORDER_ID = 53826935-b534-40a6-bcab-c7d2ddc27366
 
 ### orders
 POST http://localhost:3001/api/orders
@@ -31,6 +32,15 @@ Content-Type: application/json
   "category": "patisserie",
   "stock": 300,
   "available": true
+}
+
+### update oders
+PATCH http://localhost:3001/api/orders/{{ORDER_ID}}/status
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "status": "CONFIRMED"
 }
 
 ### 📦 Récupérer tous les produits
