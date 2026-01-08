@@ -154,31 +154,80 @@ DELETE {{baseUrl}}/whatsapp/scheduler/{scheduleId}
 POST {{baseUrl}}/whatsapp/scheduler/trigger-now
 
 ### ============================================
-### 📊 GROUPES WHATSAPP (Étape 3 - À venir)
+### 👥 GROUPES WHATSAPP (Étape 3)
 ### ============================================
 
-### 18. Lister tous les groupes WhatsApp
+### 18. Lister tous les groupes WhatsApp (depuis WhatsApp)
 GET {{baseUrl}}/whatsapp/groups
 
-### 19. Obtenir les détails d'un groupe
-# Remplacer {groupId} par l'ID réel
-GET {{baseUrl}}/whatsapp/groups/{groupId}
+### 19. Synchroniser les groupes avec la DB
+POST {{baseUrl}}/whatsapp/groups/sync
 
-### 20. Obtenir les participants d'un groupe
-# Remplacer {groupId} par l'ID réel
-GET {{baseUrl}}/whatsapp/groups/{groupId}/participants
+### 20. Lister les groupes depuis la DB
+GET {{baseUrl}}/whatsapp/groups/database
 
-### 21. Envoyer un message à un groupe
+### 21. Rechercher un groupe dans la DB
+GET {{baseUrl}}/whatsapp/groups/database?search=clients
+
+### 22. Lister seulement les groupes actifs
+GET {{baseUrl}}/whatsapp/groups/database?isActive=true
+
+### 23. Obtenir les détails d'un groupe (remplacer le JID)
+GET {{baseUrl}}/whatsapp/groups/120363XXXXXXXXX@g.us
+
+### 24. Envoyer un message texte à un groupe
 POST {{baseUrl}}/whatsapp/groups/send
 Content-Type: {{contentType}}
 
 {
-  "groupId": "120363XXXXXXXXX@g.us",
-  "message": "👥 Message pour tout le groupe !"
+  "groupJid": "120363423772805063@g.us",
+  "message": "👥 Message de test pour le groupe !"
 }
 
-### 22. Synchroniser les groupes avec la DB
-POST {{baseUrl}}/whatsapp/groups/sync
+### 25. Envoyer une image à un groupe
+POST {{baseUrl}}/whatsapp/groups/send
+Content-Type: {{contentType}}
+
+{
+  "groupJid": "120363423772805063@g.us",
+  "message": "🍰 Nouvelle promotion (bot) Manix!",
+  "mediaUrl": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=800",
+  "mediaType": "image"
+}
+
+### 26. Envoyer un message à TOUS les groupes actifs
+POST {{baseUrl}}/whatsapp/groups/broadcast
+Content-Type: {{contentType}}
+
+{
+  "message": "📢 Annonce importante pour tous nos groupes !"
+}
+
+### 27. Envoyer une image à TOUS les groupes actifs
+POST {{baseUrl}}/whatsapp/groups/broadcast
+Content-Type: {{contentType}}
+
+{
+  "message": "🎉 Promo du jour !",
+  "mediaUrl": "https://example.com/promo.jpg",
+  "mediaType": "image"
+}
+
+### 28. Désactiver un groupe
+PATCH {{baseUrl}}/whatsapp/groups/120363423772805063@g.us/toggle
+Content-Type: {{contentType}}
+
+{
+  "isActive": false
+}
+
+### 29. Activer un groupe
+PATCH {{baseUrl}}/whatsapp/groups/120363423772805063@g.us/toggle
+Content-Type: {{contentType}}
+
+{
+  "isActive": true
+}
 
 ### ============================================
 ### 🤖 RÉPONSES AUTOMATIQUES (Étape 4 - À venir)
@@ -385,6 +434,96 @@ Content-Type: {{contentType}}
   "scheduleInMinutes": 5,
   "recipients": []
 }
+
+### ============================================
+### 🖼️ ENVOI D'IMAGES
+### ============================================
+
+### 50. Envoyer une image depuis une URL publique
+POST {{baseUrl}}/whatsapp/send-image
+Content-Type: {{contentType}}
+
+{
+  "to": "237657857548",
+  "imageUrl": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=800",
+  "caption": "🍰 Voici notre nouveau gâteau !"
+}
+
+### 51. Envoyer une image sans caption
+POST {{baseUrl}}/whatsapp/send-image
+Content-Type: {{contentType}}
+
+{
+  "to": "237657857548",
+  "imageUrl": "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=800"
+}
+
+### 52. Envoyer une image de produit (exemple pâtisserie)
+POST {{baseUrl}}/whatsapp/send-image
+Content-Type: {{contentType}}
+
+{
+  "to": "237657857548",
+  "imageUrl": "https://images.unsplash.com/photo-1464349095431-e9a21285b5f3?w=800",
+  "caption": "🎂 Gâteau d'anniversaire - 15 000 FCFA\n📞 Commandez maintenant !"
+}
+
+### 53. Envoyer une image à plusieurs contacts (via boucle)
+# Note: Pour envoyer à plusieurs personnes, utilisez send-bulk ou appelez cette route plusieurs fois
+
+POST {{baseUrl}}/whatsapp/send-image
+Content-Type: {{contentType}}
+
+{
+  "to": "237657857548",
+  "imageUrl": "https://images.unsplash.com/photo-1486427944299-d1955d23e34d?w=800",
+  "caption": "☕ Nouveau menu petit-déjeuner disponible !"
+}
+
+### 54. Envoyer une image de promotion
+POST {{baseUrl}}/whatsapp/send-image
+Content-Type: {{contentType}}
+
+{
+  "to": "237657857548",
+  "imageUrl": "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800",
+  "caption": "🎉 PROMO DU JOUR 🎉\n-20% sur tous nos cupcakes\nValable jusqu'à 18h !"
+}
+
+### 55. Test avec une petite image (rapide)
+POST {{baseUrl}}/whatsapp/send-image
+Content-Type: {{contentType}}
+
+{
+  "to": "237657857548",
+  "imageUrl": "https://via.placeholder.com/400x300.png/FF6B6B/FFFFFF?text=Test+Image"
+}
+```
+
+---
+
+## 📝 **URLs d'Images de Test Gratuites**
+
+Voici des sources d'images de test que tu peux utiliser :
+
+### **1. Lorem Picsum (images aléatoires)**
+```
+https://picsum.photos/800/600
+https://picsum.photos/1200/800
+```
+
+### **2. Unsplash (images haute qualité)**
+```
+Pâtisseries:
+https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=800
+https://images.unsplash.com/photo-1464349095431-e9a21285b5f3?w=800
+https://images.unsplash.com/photo-1486427944299-d1955d23e34d?w=800
+```
+
+### **3. Placeholder (images personnalisées)**
+```
+https://via.placeholder.com/800x600.png/FF6B6B/FFFFFF?text=Promo
+https://via.placeholder.com/1200x800.jpg/4ECDC4/FFFFFF?text=Nouvelle+Collection
 ### ============================================
 ### 📝 NOTES
 ### ============================================

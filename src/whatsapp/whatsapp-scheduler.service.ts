@@ -35,7 +35,7 @@ export class WhatsAppSchedulerService {
     data: {
       message: data.message,
       type: data.type || WhatsAppMessageType.TEXT,
-      mediaUrl: data.mediaUrl, 
+      mediaUrl: data.mediaUrl,
       scheduledAt: data.scheduledAt,
       status: ScheduleStatus.PENDING,
       recipients: {

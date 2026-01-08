@@ -8,14 +8,16 @@ import { WhatsAppCronService } from './whatsapp-cron.service';
 import { WhatsappController } from './whatsapp.controller';
 import { WhatsAppSchedulerController } from './whatsapp-scheduler.controller';
 import { PrismaModule } from '../prisma/prisma.module';
+import { WhatsAppGroupsController } from './whatsapp-groups.controller';
+import { WhatsAppGroupsService } from './whatsapp-groups.service';
 
 @Module({
   imports: [
     ScheduleModule.forRoot(), // Activer les crons
     PrismaModule,
   ],
-  controllers: [WhatsappController, WhatsAppSchedulerController],
-  providers: [WhatsappService, WhatsAppSchedulerService, WhatsAppCronService],
-  exports: [WhatsappService, WhatsAppSchedulerService],
+  controllers: [WhatsappController, WhatsAppSchedulerController,WhatsAppGroupsController],
+  providers: [WhatsappService, WhatsAppSchedulerService, WhatsAppCronService,WhatsAppGroupsService],
+  exports: [WhatsappService, WhatsAppSchedulerService,WhatsappService],
 })
 export class WhatsappModule {}
