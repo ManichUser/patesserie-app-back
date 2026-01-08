@@ -1,0 +1,397 @@
+### ============================================
+### 🟢 WHATSAPP API - Tests REST Client
+### ============================================
+### Extension requise: REST Client (humao.rest-client)
+### ============================================
+
+@baseUrl = http://localhost:3001/api
+@contentType = application/json
+
+### ============================================
+### 📱 CONNEXION WHATSAPP
+### ============================================
+
+### 1. Obtenir le statut de connexion
+GET {{baseUrl}}/whatsapp/status
+
+### 2. Connecter WhatsApp (obtenir le pairing code)
+POST {{baseUrl}}/whatsapp/connect
+Content-Type: {{contentType}}
+
+{
+  "phoneNumber": "237697839130"
+}
+
+### 3. Déconnecter WhatsApp
+DELETE {{baseUrl}}/whatsapp/disconnect
+
+### ============================================
+### 💬 ENVOI DE MESSAGES
+### ============================================
+
+### 4. Envoyer un message simple
+POST {{baseUrl}}/whatsapp/send
+Content-Type: {{contentType}}
+
+{
+  "to": "237657857548",
+  "message": "🍰 Bonjour  ! Ceci est un message de test depuis l'API."
+}
+
+### 5. Envoyer un message à plusieurs destinataires (broadcast)
+POST {{baseUrl}}/whatsapp/send-bulk
+Content-Type: {{contentType}}
+
+{
+  "recipients": [
+    "237657857548",
+    "33760992973",
+    "237696459553"
+  ],
+  "message": "🎉 Message groupé de test provenant de l'API SBM (ManiX)!"
+}
+
+### ============================================
+### 📅 MESSAGES PROGRAMMÉS
+### ============================================
+
+### 6. Créer un message programmé (1 destinataire)
+POST {{baseUrl}}/whatsapp/scheduler
+Content-Type: {{contentType}}
+
+{
+  "message": "🍰 Bonjour ! Votre commande #123 est prête à être récupérée.",
+  "type": "TEXT",
+  "scheduledAt": "2026-01-08T13:25:00Z",
+  "recipients": [
+    {
+      "recipient": "237657857548",
+      "type": "PRIVATE"
+    }
+  ]
+}
+
+### 7. Créer un message programmé (plusieurs destinataires)
+POST {{baseUrl}}/whatsapp/scheduler
+Content-Type: {{contentType}}
+
+{
+  "message": "🎉 Nouvelle promotion cette semaine ! -20% sur tous les gâteaux.",
+  "type": "TEXT",
+  "scheduledAt": "2026-01-08T16:00:00Z",
+  "recipients": [
+    {
+      "recipient": "237699999999",
+      "type": "PRIVATE"
+    },
+    {
+      "recipient": "237688888888",
+      "type": "PRIVATE"
+    },
+    {
+      "recipient": "237677777777",
+      "type": "PRIVATE"
+    }
+  ]
+}
+
+### 8. Créer un message programmé pour un groupe
+POST {{baseUrl}}/whatsapp/scheduler
+Content-Type: {{contentType}}
+
+{
+  "message": "👥 Message pour le groupe !",
+  "type": "TEXT",
+  "scheduledAt": "2026-01-08T17:00:00Z",
+  "recipients": [
+    {
+      "recipient": "120363XXXXXXXXX@g.us",
+      "type": "GROUP"
+    }
+  ]
+}
+
+### 9. Créer un message programmé dans 2 minutes (test rapide)
+# @name createScheduledMessage
+POST {{baseUrl}}/whatsapp/scheduler
+Content-Type: {{contentType}}
+
+{
+  "message": "⏰ Message programmé pour dans 2 minutes !",
+  "type": "TEXT",
+  "scheduledAt": "{{$datetime rfc1123 120}}",
+  "recipients": [
+    {
+      "recipient": "237657857548",
+      "type": "PRIVATE"
+    }
+  ]
+}
+
+### 10. Lister tous les messages programmés
+GET {{baseUrl}}/whatsapp/scheduler
+
+### 11. Lister les messages programmés par statut (PENDING)
+GET {{baseUrl}}/whatsapp/scheduler?status=PENDING
+
+### 12. Lister les messages programmés par statut (SENT)
+GET {{baseUrl}}/whatsapp/scheduler?status=SENT
+
+### 13. Lister les messages programmés par statut (FAILED)
+GET {{baseUrl}}/whatsapp/scheduler?status=FAILED
+
+### 14. Lister les 10 derniers messages programmés
+GET {{baseUrl}}/whatsapp/scheduler?limit=10
+
+### 15. Obtenir les statistiques
+GET {{baseUrl}}/whatsapp/scheduler/stats
+
+### 16. Annuler un message programmé
+# Remplacer {scheduleId} par l'ID réel
+DELETE {{baseUrl}}/whatsapp/scheduler/{scheduleId}
+
+### 17. Forcer l'exécution du cron maintenant (test)
+POST {{baseUrl}}/whatsapp/scheduler/trigger-now
+
+### ============================================
+### 📊 GROUPES WHATSAPP (Étape 3 - À venir)
+### ============================================
+
+### 18. Lister tous les groupes WhatsApp
+GET {{baseUrl}}/whatsapp/groups
+
+### 19. Obtenir les détails d'un groupe
+# Remplacer {groupId} par l'ID réel
+GET {{baseUrl}}/whatsapp/groups/{groupId}
+
+### 20. Obtenir les participants d'un groupe
+# Remplacer {groupId} par l'ID réel
+GET {{baseUrl}}/whatsapp/groups/{groupId}/participants
+
+### 21. Envoyer un message à un groupe
+POST {{baseUrl}}/whatsapp/groups/send
+Content-Type: {{contentType}}
+
+{
+  "groupId": "120363XXXXXXXXX@g.us",
+  "message": "👥 Message pour tout le groupe !"
+}
+
+### 22. Synchroniser les groupes avec la DB
+POST {{baseUrl}}/whatsapp/groups/sync
+
+### ============================================
+### 🤖 RÉPONSES AUTOMATIQUES (Étape 4 - À venir)
+### ============================================
+
+### 23. Créer une réponse automatique
+POST {{baseUrl}}/whatsapp/auto-reply
+Content-Type: {{contentType}}
+
+{
+  "keyword": "prix",
+  "response": "Nos prix commencent à partir de 5000 FCFA. Consultez notre catalogue : www.exemple.com/prix",
+  "isActive": true
+}
+
+### 24. Lister toutes les réponses automatiques
+GET {{baseUrl}}/whatsapp/auto-reply
+
+### 25. Activer/Désactiver une réponse automatique
+# Remplacer {replyId} par l'ID réel
+PATCH {{baseUrl}}/whatsapp/auto-reply/{replyId}/toggle
+
+### 26. Supprimer une réponse automatique
+# Remplacer {replyId} par l'ID réel
+DELETE {{baseUrl}}/whatsapp/auto-reply/{replyId}
+
+### ============================================
+### 📈 STATISTIQUES & MONITORING
+### ============================================
+
+### 27. Obtenir les statistiques globales
+GET {{baseUrl}}/whatsapp/stats
+
+### 28. Historique des messages envoyés (24h)
+GET {{baseUrl}}/whatsapp/history?period=24h
+
+### 29. Historique des messages envoyés (7 jours)
+GET {{baseUrl}}/whatsapp/history?period=7d
+
+### 30. Historique des messages envoyés (30 jours)
+GET {{baseUrl}}/whatsapp/history?period=30d
+
+### ============================================
+### 🎯 TESTS SPÉCIFIQUES PÂTISSERIE
+### ============================================
+
+### 31. Notification de commande prête
+POST {{baseUrl}}/whatsapp/send
+Content-Type: {{contentType}}
+
+{
+  "to": "237699999999",
+  "message": "🍰 Bonjour ! Votre commande #ORD-001 est prête.\n\n📦 Détails :\n- Gâteau au chocolat x1\n- Tarte aux fruits x2\n\nMontant : 15 000 FCFA\n\n📍 À récupérer avant 18h.\nMerci ! 😊"
+}
+
+### 32. Confirmation de paiement
+POST {{baseUrl}}/whatsapp/send
+Content-Type: {{contentType}}
+
+{
+  "to": "237699999999",
+  "message": "✅ Paiement reçu !\n\nMontant : 15 000 FCFA\nCommande : #ORD-001\nMéthode : Mobile Money\n\nVotre commande sera prête dans 2h.\nMerci pour votre confiance ! 🙏"
+}
+
+### 33. Rappel de retrait
+POST {{baseUrl}}/whatsapp/scheduler
+Content-Type: {{contentType}}
+
+{
+  "message": "⏰ Rappel : N'oubliez pas de récupérer votre commande #ORD-001 avant 18h aujourd'hui.\n\n📍 Adresse : [Votre adresse]\n\nÀ bientôt ! 😊",
+  "type": "TEXT",
+  "scheduledAt": "{{$datetime iso8601 3600}}",
+  "recipients": [
+    {
+      "recipient": "237699999999",
+      "type": "PRIVATE"
+    }
+  ]
+}
+
+### 34. Message promotionnel (weekend)
+POST {{baseUrl}}/whatsapp/scheduler
+Content-Type: {{contentType}}
+
+{
+  "message": "🎉 PROMOTION WEEKEND ! 🎉\n\n-20% sur tous nos gâteaux ce samedi et dimanche !\n\n🍰 Gâteau chocolat : 8 000 → 6 400 FCFA\n🍓 Tarte aux fraises : 10 000 → 8 000 FCFA\n🎂 Gâteau anniversaire : 15 000 → 12 000 FCFA\n\nRéservez maintenant : 📞 +237 6XX XXX XXX",
+  "type": "TEXT",
+  "scheduledAt": "2026-01-11T08:00:00Z",
+  "recipients": [
+    {
+      "recipient": "237699999999",
+      "type": "PRIVATE"
+    },
+    {
+      "recipient": "237688888888",
+      "type": "PRIVATE"
+    }
+  ]
+}
+
+### 35. Message de satisfaction client
+POST {{baseUrl}}/whatsapp/scheduler
+Content-Type: {{contentType}}
+
+{
+  "message": "Bonjour ! 😊\n\nVotre commande #ORD-001 vous a-t-elle satisfait ?\n\nVotre avis compte énormément pour nous !\n\nRépondez simplement :\n👍 = Très satisfait\n😊 = Satisfait\n😐 = Peut mieux faire\n\nMerci ! 🙏",
+  "type": "TEXT",
+  "scheduledAt": "{{$datetime iso8601 86400}}",
+  "recipients": [
+    {
+      "recipient": "237699999999",
+      "type": "PRIVATE"
+    }
+  ]
+}
+
+### ============================================
+### 🧪 TESTS DE CHARGE
+### ============================================
+
+### 36. Envoyer 10 messages programmés en batch
+POST {{baseUrl}}/whatsapp/scheduler
+Content-Type: {{contentType}}
+
+{
+  "message": "📢 Message de test en masse",
+  "type": "TEXT",
+  "scheduledAt": "{{$datetime iso8601 60}}",
+  "recipients": [
+    { "recipient": "237699999991", "type": "PRIVATE" },
+    { "recipient": "237699999992", "type": "PRIVATE" },
+    { "recipient": "237699999993", "type": "PRIVATE" },
+    { "recipient": "237699999994", "type": "PRIVATE" },
+    { "recipient": "237699999995", "type": "PRIVATE" },
+    { "recipient": "237699999996", "type": "PRIVATE" },
+    { "recipient": "237699999997", "type": "PRIVATE" },
+    { "recipient": "237699999998", "type": "PRIVATE" },
+    { "recipient": "237699999999", "type": "PRIVATE" },
+    { "recipient": "237699999990", "type": "PRIVATE" }
+  ]
+}
+
+### ============================================
+### 🐛 DEBUG & TROUBLESHOOTING
+### ============================================
+
+### 37. Vérifier la santé de l'API
+GET {{baseUrl}}/health
+
+### 38. Test de connexion simple
+GET {{baseUrl}}/
+
+### 39. Obtenir les logs récents (si endpoint disponible)
+GET {{baseUrl}}/whatsapp/logs?limit=20
+### ============================================
+### 📢 STATUTS WHATSAPP (STORIES)
+### ============================================
+
+### 40. Publier un statut texte
+POST {{baseUrl}}/whatsapp/status/text
+Content-Type: {{contentType}}
+
+{
+  "message": "🎉 Nouvelle promotion cette semaine !"
+}
+
+### 41. Publier un statut image
+POST {{baseUrl}}/whatsapp/status/image
+Content-Type: {{contentType}}
+
+{
+  "imageUrl": "https://vscode.dev/github/ManichUser/patesserie-app-back/blob/main/test-images/cake.png",
+  "caption": "🍰 -20% sur tous nos gâteaux ce weekend !"
+}
+
+### 42. Publier un statut vidéo
+POST {{baseUrl}}/whatsapp/status/video
+Content-Type: {{contentType}}
+
+{
+  "videoUrl": "https://example.com/promo.mp4",
+  "caption": "🎥 Découvrez notre nouvelle collection !"
+}
+
+### 43. Programmer un statut image
+POST {{baseUrl}}/whatsapp/scheduler
+Content-Type: {{contentType}}
+
+{
+  "message": "🍰 Promo du jour !",
+  "type": "STATUS",
+  "mediaUrl": "https://example.com/gateaux.jpg",
+  "scheduleInMinutes": 2,
+  "recipients": []
+}
+
+### 44. Programmer un statut texte
+POST {{baseUrl}}/whatsapp/scheduler
+Content-Type: {{contentType}}
+
+{
+  "message": "📢 Ouverture demain à 8h !",
+  "type": "STATUS",
+  "scheduleInMinutes": 5,
+  "recipients": []
+}
+### ============================================
+### 📝 NOTES
+### ============================================
+# - Remplacer {{baseUrl}} par votre URL en production
+# - Remplacer les numéros de test par de vrais numéros
+# - Les dates ISO8601 : "2026-01-08T15:00:00Z"
+# - Format numéro : sans espaces ni + (ex: 237699999999)
+# - Format groupe : XXXXXXXXX@g.us
+# - {{$datetime iso8601 X}} = maintenant + X secondes
+# ============================================

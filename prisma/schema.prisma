@@ -180,15 +180,49 @@ model Favorite {
 model WhatsAppSchedule {
   id          String          @id @default(uuid())
   message     String
-  recipients  String[]        // Array of phone numbers
+  type        WhatsAppMessageType @default(TEXT)
+  mediaUrl    String?   
   scheduledAt DateTime
   status      ScheduleStatus  @default(PENDING)
   sentAt      DateTime?
   error       String?
   createdAt   DateTime        @default(now())
 
+  recipients  WhatsAppRecipient[]
+
   @@map("whatsapp_schedules")
 }
+// Destinataires séparés
+model WhatsAppRecipient {
+  id           String          @id @default(uuid())
+  scheduleId   String
+  recipient    String
+  type         RecipientType
+  status       ScheduleStatus  @default(PENDING)
+  error        String?
+
+  schedule     WhatsAppSchedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+
+  @@map("whatsapp_recipients")
+  @@index([status])
+  @@index([type])
+}
+model WhatsAppGroup {
+  id                String   @id @default(uuid())
+  jid               String   @unique // ID du groupe WhatsApp (ex: 120363XXX@g.us)
+  name              String
+  description       String?
+  participantsCount Int      @default(0)
+  isActive          Boolean  @default(true)
+  lastSyncAt        DateTime @default(now())
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@map("whatsapp_groups")
+  @@index([jid])
+  @@index([isActive])
+}
+
 
 // ----------------------------
 // Enums
@@ -219,6 +253,18 @@ enum ScheduleStatus {
   SENT
   FAILED
 }
+
+enum RecipientType {
+  PRIVATE
+  GROUP
+}
+enum WhatsAppMessageType {
+  TEXT
+  IMAGE
+  VIDEO
+  STATUS
+}
+
 
 // Media des produits
 enum MediaType {
