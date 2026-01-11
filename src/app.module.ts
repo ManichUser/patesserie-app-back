@@ -11,6 +11,13 @@ import { CloudinaryModule } from './cloudinary/cloudinary.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { ConfigModule } from '@nestjs/config';
 import { FavoritesModule } from './favorites/favorites.module';
+import { CategoriesModule } from './categories/categories.module';
+import { SalesModule } from './sales/sales.module';
+import { ExpensesModule } from './expenses/expenses.module';
+import { FinancialGoalsModule } from './financial-goals/financial-goals.module';
+import { BusinessRecommendationsModule } from './business-recommendations/business-recommendations.module';
+import { DailySnapshotsModule } from './daily-snapshots/daily-snapshots.module';
+import { SpecialOffersModule } from './special-offers/special-offers.module';
 
 
 @Module({
@@ -22,7 +29,15 @@ import { FavoritesModule } from './favorites/favorites.module';
     CartModule, WhatsappModule,
     CloudinaryModule, PrismaModule,
     AuthModule,
-    FavoritesModule,],
+    FavoritesModule,
+    CategoriesModule,
+    SalesModule,
+    ExpensesModule,
+    FinancialGoalsModule,
+    BusinessRecommendationsModule,
+    DailySnapshotsModule,
+    SpecialOffersModule,
+  ],
   controllers: [AppController],
   providers: [AppService],
 })

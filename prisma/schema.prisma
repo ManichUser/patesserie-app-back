@@ -1,215 +1,549 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
-  provider = "prisma-client"
-  output   = "../src/generated/prisma"
+  provider        = "prisma-client"
+  output          = "../src/generated/prisma"
   previewFeatures = ["driverAdapters"]
 }
 
 datasource db {
   provider = "postgresql"
-  
 }
 
-
-// Users
-
 model User {
-  id        String    @id @default(uuid())
-  name      String
-  email     String    @unique
-  phone     String
-  password  String
-  role      Role      @default(USER)
-  avatar    String?   // Photo de profil
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  id               String          @id @default(uuid())
+  name             String
+  email            String          @unique
+  phone            String          @unique
+  password         String
+  role             Role            @default(USER)
+  avatar           String?
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  address          String?
+  birthdate        DateTime?
+  city             String?
+  district         String?
+  emailVerified    Boolean         @default(false)
+  gender           Gender?
+  lastOrderDate    DateTime?
+  loyaltyPoints    Int             @default(0)
+  newsletter       Boolean         @default(true)
+  phoneVerified    Boolean         @default(false)
+  smsNotifications Boolean         @default(true)
+  totalOrders      Int             @default(0)
+  totalSpent       Float           @default(0)
+  addresses        Address[]
+  carts            Cart[]
+  favorites        Favorite[]
+  loyaltyRewards   LoyaltyReward[]
+  notifications    Notification[]
+  orders           Order[]
+  reviews          Review[]
 
-  orders    Order[]
-  carts     Cart[]
-  favorites Favorite[]
-
+  @@index([email])
+  @@index([phone])
   @@map("users")
 }
 
+model Address {
+  id           String   @id @default(uuid())
+  userId       String
+  label        String
+  fullName     String
+  phone        String
+  address      String
+  city         String
+  district     String
+  landmark     String?
+  instructions String?
+  isDefault    Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orders       Order[]
 
-// Products
+  @@index([userId])
+  @@map("addresses")
+}
+
+model Category {
+  id              String    @id @default(uuid())
+  name            String    @unique
+  description     String?
+  slug            String    @unique
+  icon            String?
+  image           String?
+  order           Int       @default(0)
+  isActive        Boolean   @default(true)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  metaDescription String?
+  metaTitle       String?
+  products        Product[]
+
+  @@index([slug])
+  @@index([isActive])
+  @@map("categories")
+}
+
 model Product {
-  id          String    @id @default(uuid())
-  name        String
-  description String?
-  price       Float
-  category    String?
-  likes       Int       @default(0)
-  available   Boolean   @default(true)
-  stock       Int?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  
-  media       ProductMedia[] 
-  cartItems   CartItem[]
-  orderItems  OrderItem[]
-  favorites   Favorite[]
-  
+  id                String           @id @default(uuid())
+  name              String
+  description       String?
+  price             Float
+  likes             Int              @default(0)
+  available         Boolean          @default(true)
+  stock             Int              @default(0)
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  categoryId        String?
+  allergens         String[]
+  calories          Int?
+  carbs             Float?
+  compareAtPrice    Float?
+  costPrice         Float?
+  fat               Float?
+  ingredients       String?
+  lowStockThreshold Int              @default(5)
+  metaDescription   String?
+  metaTitle         String?
+  prepTime          Int?
+  protein           Float?
+  servings          Int?
+  sku               String?          @unique
+  views             Int              @default(0)
+  weight            Float?
+  cartItems         CartItem[]
+  favorites         Favorite[]
+  orderItems        OrderItem[]
+  media             ProductMedia[]
+  variants          ProductVariant[]
+  category          Category?        @relation(fields: [categoryId], references: [id])
+  reviews           Review[]
+
+  @@index([categoryId])
+  @@index([sku])
+  @@index([available])
   @@map("products")
 }
 
-//  ProductMedia
-model ProductMedia {
-  id         String      @id @default(uuid())
-  productId  String
-  product    Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
-  url        String
-  publicId   String      // Cloudinary public_id
-  type       MediaType   @default(IMAGE) // ← Nouveau champ
-  altText    String?
-  order      Int         @default(0)
-  isFeatured Boolean     @default(false)
-  duration   Int?        // Durée en secondes (pour vidéos)
-  size       Int?        // Taille en bytes
-  format     String?     // mp4, webp, jpg, etc.
-  createdAt  DateTime    @default(now())
-  
-  @@map("product_media")
-  @@index([productId])
-  @@index([type])
-}
-
-
-
-
-
-// ----------------------------
-// Shopping carts
-// ----------------------------
-model Cart {
+model ProductVariant {
   id        String      @id @default(uuid())
-  userId    String?
-  user      User?       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  status    CartStatus  @default(TEMP)
-  name      String?
+  productId String
+  name      String
+  type      VariantType
+  price     Float
+  sku       String?     @unique
+  stock     Int         @default(0)
+  isDefault Boolean     @default(false)
+  order     Int         @default(0)
   createdAt DateTime    @default(now())
   updatedAt DateTime    @updatedAt
+  product   Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
 
+  @@index([productId])
+  @@map("product_variants")
+}
+
+model ProductMedia {
+  id         String    @id @default(uuid())
+  productId  String
+  url        String
+  publicId   String
+  type       MediaType @default(IMAGE)
+  altText    String?
+  order      Int       @default(0)
+  isFeatured Boolean   @default(false)
+  duration   Int?
+  size       Int?
+  format     String?
+  createdAt  DateTime  @default(now())
+  product    Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+  @@index([type])
+  @@map("product_media")
+}
+
+model Review {
+  id              String   @id @default(uuid())
+  productId       String
+  userId          String
+  rating          Int
+  title           String?
+  comment         String?
+  isApproved      Boolean  @default(false)
+  isVerifiedBuyer Boolean  @default(false)
+  helpfulCount    Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  product         Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId])
+  @@index([productId])
+  @@index([userId])
+  @@index([rating])
+  @@map("reviews")
+}
+
+model SpecialOffer {
+  id            String       @id @default(uuid())
+  title         String
+  description   String?
+  type          OfferType
+  image         String?
+  badge         String?
+  discountType  DiscountType
+  discountValue Float
+  minPurchase   Float?
+  maxDiscount   Float?
+  productIds    String[]
+  categoryIds   String[]
+  startDate     DateTime
+  endDate       DateTime
+  usageLimit    Int?
+  usageCount    Int          @default(0)
+  limitPerUser  Int?
+  isActive      Boolean      @default(true)
+  priority      Int          @default(0)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  @@index([isActive])
+  @@index([startDate, endDate])
+  @@map("special_offers")
+}
+
+model Cart {
+  id        String     @id @default(uuid())
+  userId    String?
+  status    CartStatus @default(TEMP)
+  name      String?
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  expiresAt DateTime?
+  sessionId String?    @unique
   items     CartItem[]
-  orders    Order[]     
+  user      User?      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orders    Order[]
 
+  @@index([sessionId])
   @@map("carts")
 }
 
-
 model CartItem {
-  id        String   @id @default(uuid())
-  cartId    String
-  cart      Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
-  productId String
-  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
-  quantity  Int      @default(1)
-  note      String?  // Special instructions
+  id         String   @id @default(uuid())
+  cartId     String
+  productId  String
+  quantity   Int      @default(1)
+  note       String?
+  createdAt  DateTime @default(now())
+  priceAtAdd Float?
+  updatedAt  DateTime @default(now()) @updatedAt
+  cart       Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   @@unique([cartId, productId])
   @@map("cart_items")
 }
 
-// ----------------------------
-// Orders
-// ----------------------------
 model Order {
-  id              String      @id @default(uuid())
-  userId          String
-  user            User        @relation(fields: [userId], references: [id])
-  orderNumber     String      @unique
-  deliveryName    String
-  deliveryPhone   String
-  deliveryAddress String?
-  scheduledAt     DateTime?
-  status          OrderStatus @default(PENDING)
-  total           Float
-  paymentMethod   String?
-  isPaid          Boolean     @default(false)
-  whatsappSent    Boolean     @default(false)
-  notes           String?
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
+  id                   String               @id @default(uuid())
+  userId               String
+  orderNumber          String               @unique
+  deliveryName         String
+  deliveryPhone        String
+  deliveryAddress      String?
+  scheduledAt          DateTime?
+  status               OrderStatus          @default(PENDING)
+  total                Float
+  paymentMethod        String?
+  isPaid               Boolean              @default(false)
+  whatsappSent         Boolean              @default(false)
+  notes                String?
+  createdAt            DateTime             @default(now())
+  updatedAt            DateTime             @updatedAt
+  cartId               String
+  addressId            String?
+  cancelReason         String?
+  cancelledAt          DateTime?
+  deliveredAt          DateTime?
+  deliveryCity         String?
+  deliveryDistrict     String?
+  deliveryFee          Float                @default(0)
+  deliveryInstructions String?
+  deliveryLandmark     String?
+  discount             Float                @default(0)
+  estimatedDelivery    DateTime?
+  negotiatedTotal      Float?
+  negotiationNote      String?
+  paidAt               DateTime?
+  paymentStatus        PaymentStatus        @default(PENDING)
+  subtotal             Float                @default(0)
+  tax                  Float                @default(0)
+  trackingNumber       String?
+  items                OrderItem[]
+  statusHistory        OrderStatusHistory[]
+  address              Address?             @relation(fields: [addressId], references: [id])
+  cart                 Cart                 @relation(fields: [cartId], references: [id])
+  user                 User                 @relation(fields: [userId], references: [id])
+  sale                 Sale?
 
-  cartId          String
-  cart            Cart        @relation(fields: [cartId], references: [id])
-
-  items           OrderItem[]
-
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
   @@map("orders")
 }
 
-
-// Items in an order
 model OrderItem {
-  id        String   @id @default(uuid())
-  orderId   String
-  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  productId String
-  product   Product  @relation(fields: [productId], references: [id])
-  quantity  Int
-  price     Float
-  note      String?
+  id           String  @id @default(uuid())
+  orderId      String
+  productId    String
+  quantity     Int
+  price        Float
+  note         String?
+  productImage String?
+  productName  String?
+  order        Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product      Product @relation(fields: [productId], references: [id])
 
+  @@index([orderId])
   @@map("order_items")
 }
 
-// ----------------------------
-// Favorites
-// ----------------------------
+model OrderStatusHistory {
+  id        String      @id @default(uuid())
+  orderId   String
+  status    OrderStatus
+  note      String?
+  createdBy String?
+  createdAt DateTime    @default(now())
+  order     Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@index([createdAt])
+  @@map("order_status_history")
+}
+
+model Sale {
+  id                String   @id @default(uuid())
+  orderId           String   @unique
+  listPrice         Float
+  salePrice         Float
+  actualPrice       Float
+  costPrice         Float
+  deliveryCost      Float    @default(0)
+  otherCosts        Float    @default(0)
+  grossProfit       Float
+  profitMargin      Float
+  wasNegotiated     Boolean  @default(false)
+  negotiationAmount Float    @default(0)
+  negotiationReason String?
+  paymentMethod     String
+  saleDate          DateTime @default(now())
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  order             Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([saleDate])
+  @@index([wasNegotiated])
+  @@map("sales")
+}
+
+model Expense {
+  id          String            @id @default(uuid())
+  category    ExpenseCategory
+  description String
+  amount      Float
+  vendor      String?
+  reference   String?
+  notes       String?
+  isRecurring Boolean           @default(false)
+  frequency   ExpenseFrequency?
+  receiptUrl  String?
+  expenseDate DateTime          @default(now())
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  @@index([category])
+  @@index([expenseDate])
+  @@index([isRecurring])
+  @@map("expenses")
+}
+
+model FinancialGoal {
+  id           String     @id @default(uuid())
+  type         GoalType
+  period       GoalPeriod
+  targetValue  Float
+  currentValue Float      @default(0)
+  startDate    DateTime
+  endDate      DateTime
+  isActive     Boolean    @default(true)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@index([period])
+  @@index([isActive])
+  @@map("financial_goals")
+}
+
+model BusinessRecommendation {
+  id               String                 @id @default(uuid())
+  type             RecommendationType
+  priority         RecommendationPriority
+  title            String
+  description      String
+  metrics          Json?
+  suggestedActions String[]
+  estimatedImpact  String?
+  status           RecommendationStatus   @default(PENDING)
+  isDismissed      Boolean                @default(false)
+  wasImplemented   Boolean                @default(false)
+  implementedAt    DateTime?
+  adminFeedback    String?
+  createdAt        DateTime               @default(now())
+  updatedAt        DateTime               @updatedAt
+
+  @@index([type])
+  @@index([priority])
+  @@index([status])
+  @@index([isDismissed])
+  @@map("business_recommendations")
+}
+
+model DailySnapshot {
+  id                  String   @id @default(uuid())
+  date                DateTime @unique @db.Date
+  totalRevenue        Float    @default(0)
+  totalOrders         Int      @default(0)
+  totalProfit         Float    @default(0)
+  averageOrderValue   Float    @default(0)
+  totalExpenses       Float    @default(0)
+  totalCost           Float    @default(0)
+  newCustomers        Int      @default(0)
+  returningCustomers  Int      @default(0)
+  topSellingProductId String?
+  lowStockProducts    Int      @default(0)
+  conversionRate      Float    @default(0)
+  profitMargin        Float    @default(0)
+  createdAt           DateTime @default(now())
+
+  @@index([date])
+  @@map("daily_snapshots")
+}
+
 model Favorite {
   id        String   @id @default(uuid())
   userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   productId String
-  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, productId])
+  @@index([userId])
   @@map("favorites")
 }
 
-// ----------------------------
-// WhatsApp message scheduler
-// ----------------------------
+model LoyaltyReward {
+  id        String    @id @default(uuid())
+  userId    String
+  points    Int
+  reason    String
+  orderId   String?
+  expiresAt DateTime?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("loyalty_rewards")
+}
+
+model Coupon {
+  id             String     @id @default(uuid())
+  code           String     @unique
+  description    String?
+  type           CouponType
+  value          Float
+  minOrderAmount Float?
+  maxDiscount    Float?
+  usageLimit     Int?
+  usageCount     Int        @default(0)
+  validFrom      DateTime
+  validUntil     DateTime
+  isActive       Boolean    @default(true)
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+
+  @@index([code])
+  @@index([validFrom, validUntil])
+  @@map("coupons")
+}
+
+model Notification {
+  id        String           @id @default(uuid())
+  userId    String
+  type      NotificationType
+  title     String
+  message   String
+  data      Json?
+  isRead    Boolean          @default(false)
+  readAt    DateTime?
+  createdAt DateTime         @default(now())
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([isRead])
+  @@index([createdAt])
+  @@map("notifications")
+}
+
+model ProductView {
+  id        String   @id @default(uuid())
+  productId String
+  userId    String?
+  sessionId String?
+  createdAt DateTime @default(now())
+
+  @@index([productId])
+  @@index([userId])
+  @@index([createdAt])
+  @@map("product_views")
+}
+
 model WhatsAppSchedule {
-  id          String          @id @default(uuid())
+  id          String              @id @default(uuid())
   message     String
-  type        WhatsAppMessageType @default(TEXT)
-  mediaUrl    String?   
   scheduledAt DateTime
-  status      ScheduleStatus  @default(PENDING)
+  status      ScheduleStatus      @default(PENDING)
   sentAt      DateTime?
   error       String?
-  createdAt   DateTime        @default(now())
-
+  createdAt   DateTime            @default(now())
+  type        WhatsAppMessageType @default(TEXT)
+  mediaUrl    String?
   recipients  WhatsAppRecipient[]
 
   @@map("whatsapp_schedules")
 }
-// Destinataires séparés
+
 model WhatsAppRecipient {
-  id           String          @id @default(uuid())
-  scheduleId   String
-  recipient    String
-  type         RecipientType
-  status       ScheduleStatus  @default(PENDING)
-  error        String?
+  id         String           @id @default(uuid())
+  scheduleId String
+  recipient  String
+  type       RecipientType
+  status     ScheduleStatus   @default(PENDING)
+  error      String?
+  schedule   WhatsAppSchedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
 
-  schedule     WhatsAppSchedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
-
-  @@map("whatsapp_recipients")
   @@index([status])
   @@index([type])
+  @@map("whatsapp_recipients")
 }
+
 model WhatsAppGroup {
   id                String   @id @default(uuid())
-  jid               String   @unique // ID du groupe WhatsApp (ex: 120363XXX@g.us)
+  jid               String   @unique
   name              String
   description       String?
   participantsCount Int      @default(0)
@@ -218,215 +552,260 @@ model WhatsAppGroup {
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
-  @@map("whatsapp_groups")
   @@index([jid])
   @@index([isActive])
+  @@map("whatsapp_groups")
 }
-
 
 model AutoReply {
-  id          String   @id @default(uuid())
-  keyword     String   @unique // Mot-clé déclencheur (ex: "prix", "horaires")
-  response    String   @db.Text // Réponse automatique
-  isActive    Boolean  @default(true)
-  matchType   MatchType @default(CONTAINS) // Type de correspondance
-  priority    Int      @default(0) // Priorité (0 = basse, 10 = haute)
-  usageCount  Int      @default(0) // Nombre de fois utilisé
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id         String    @id @default(uuid())
+  keyword    String    @unique
+  response   String
+  isActive   Boolean   @default(true)
+  matchType  MatchType @default(CONTAINS)
+  priority   Int       @default(0)
+  usageCount Int       @default(0)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
 
-  @@map("auto_replies")
   @@index([keyword])
   @@index([isActive])
+  @@map("auto_replies")
 }
 
-// ============================================
-// CONTACTS WHATSAPP (CRM)
-// ============================================
 model WhatsAppContact {
-  id              String   @id @default(uuid())
-  jid             String   @unique // ID WhatsApp (ex: 237657857548@s.whatsapp.net)
-  name            String?
-  phone           String
-  pushName        String?  // Nom affiché sur WhatsApp
-  
-  // Données business
-  tags            String[] // ["vip", "client-regulier", "prospect"]
-  notes           String?  @db.Text
-  totalOrders     Int      @default(0)
-  totalSpent      Float    @default(0)
-  lastOrderDate   DateTime?
-  
-  // Engagement
+  id               String          @id @default(uuid())
+  jid              String          @unique
+  name             String?
+  phone            String
+  pushName         String?
+  tags             String[]
+  notes            String?
+  totalOrders      Int             @default(0)
+  totalSpent       Float           @default(0)
+  lastOrderDate    DateTime?
   firstMessageDate DateTime?
   lastMessageDate  DateTime?
-  messageCount     Int      @default(0)
-  isBlocked        Boolean  @default(false)
-  isFavorite       Boolean  @default(false)
-  
-  // Segmentation
-  segment         CustomerSegment @default(PROSPECT)
-  source          String?  // "facebook", "referral", "walk-in", "whatsapp"
-  
-  // Avatar
-  avatarUrl       String?
-  
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  
-  messages        Message[]
-  followUps       FollowUp[]
-  
-  @@map("whatsapp_contacts")
+  messageCount     Int             @default(0)
+  isBlocked        Boolean         @default(false)
+  isFavorite       Boolean         @default(false)
+  segment          CustomerSegment @default(PROSPECT)
+  source           String?
+  avatarUrl        String?
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  followUps        FollowUp[]
+  messages         Message[]
+
   @@index([jid])
   @@index([phone])
   @@index([segment])
   @@index([lastMessageDate])
+  @@map("whatsapp_contacts")
 }
 
-
-// ============================================
-// HISTORIQUE DES CONVERSATIONS
-// ============================================
 model Message {
-  id              String   @id @default(uuid())
-  
-  // Identifiants WhatsApp
-  messageId       String   @unique // ID du message WhatsApp
-  conversationId  String   // ID de la conversation (jid)
-  
-  // Contact
+  id              String           @id @default(uuid())
+  messageId       String           @unique
+  conversationId  String
   contactId       String
-  contact         WhatsAppContact @relation(fields: [contactId], references: [id], onDelete: Cascade)
-  
-  // Contenu
   type            MessageType
-  content         String?  @db.Text
+  content         String?
   caption         String?
-  mediaUrl        String?  // URL du média (image, vidéo, audio)
-  mediaSize       Int?     // Taille en bytes
+  mediaUrl        String?
+  mediaSize       Int?
   mediaMimeType   String?
-  
-  // Direction
   direction       MessageDirection
   isFromMe        Boolean
-  
-  // Statut
-  status          MessageStatus @default(SENT)
+  status          MessageStatus    @default(SENT)
   readAt          DateTime?
   deliveredAt     DateTime?
-  
-  // Métadonnées
-  isAutoReply     Boolean  @default(false)
-  autoReplyId     String?  // ID de la règle de réponse automatique utilisée
-  
-  // Contexte
-  quotedMessageId String?  // Si c'est une réponse à un message
-  isForwarded     Boolean  @default(false)
-  
-  timestamp       DateTime @default(now())
-  createdAt       DateTime @default(now())
-  
-  @@map("messages")
+  isAutoReply     Boolean          @default(false)
+  autoReplyId     String?
+  quotedMessageId String?
+  isForwarded     Boolean          @default(false)
+  timestamp       DateTime         @default(now())
+  createdAt       DateTime         @default(now())
+  contact         WhatsAppContact  @relation(fields: [contactId], references: [id], onDelete: Cascade)
+
   @@index([contactId])
   @@index([conversationId])
   @@index([timestamp])
   @@index([direction])
   @@index([isAutoReply])
+  @@map("messages")
 }
 
-
-// ============================================
-// MESSAGES DE SUIVI AUTOMATIQUES
-// ============================================
 model FollowUpTemplate {
-  id          String   @id @default(uuid())
-  name        String   // Ex: "Confirmation commande"
-  description String?
-  
-  // Déclencheur
-  trigger     FollowUpTrigger
-  
-  // Délai
-  delayDays   Int      @default(0)
-  delayHours  Int      @default(0)
-  delayMinutes Int     @default(0)
-  
-  // Contenu
-  message     String   @db.Text
-  mediaUrl    String?
-  mediaType   WhatsAppMessageType?
-  
-  // Conditions
-  conditions  Json?    // Conditions avancées (JSON)
-  
-  // Statut
-  isActive    Boolean  @default(true)
-  priority    Int      @default(0)
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
-  followUps   FollowUp[]
-  
-  @@map("follow_up_templates")
+  id           String               @id @default(uuid())
+  name         String
+  description  String?
+  trigger      FollowUpTrigger
+  delayDays    Int                  @default(0)
+  delayHours   Int                  @default(0)
+  delayMinutes Int                  @default(0)
+  message      String
+  mediaUrl     String?
+  mediaType    WhatsAppMessageType?
+  conditions   Json?
+  isActive     Boolean              @default(true)
+  priority     Int                  @default(0)
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+  followUps    FollowUp[]
+
   @@index([trigger])
   @@index([isActive])
+  @@map("follow_up_templates")
 }
 
-
-
 model FollowUp {
-  id          String   @id @default(uuid())
-  
-  // Lien avec le contact
+  id          String           @id @default(uuid())
   contactId   String
-  contact     WhatsAppContact @relation(fields: [contactId], references: [id], onDelete: Cascade)
-  
-  // Template utilisé
   templateId  String
-  template    FollowUpTemplate @relation(fields: [templateId], references: [id])
-  
-  // Programmation
   scheduledAt DateTime
-  
-  // Statut
-  status      FollowUpStatus @default(PENDING)
+  status      FollowUpStatus   @default(PENDING)
   sentAt      DateTime?
   error       String?
-  
-  // Métadonnées
-  metadata    Json?    // Données contextuelles (orderId, etc.)
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
-  @@map("follow_ups")
+  metadata    Json?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  contact     WhatsAppContact  @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  template    FollowUpTemplate @relation(fields: [templateId], references: [id])
+
   @@index([contactId])
   @@index([templateId])
   @@index([scheduledAt, status])
+  @@map("follow_ups")
 }
 
-
-
-// ----------------------------
-// Enums
-// ----------------------------
 enum Role {
   USER
   ADMIN
   SUPER
 }
 
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum VariantType {
+  SIZE
+  FLAVOR
+  COLOR
+  CUSTOM
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+enum CouponType {
+  PERCENTAGE
+  FIXED_AMOUNT
+  FREE_DELIVERY
+}
+
+enum NotificationType {
+  ORDER_CONFIRMED
+  ORDER_PREPARING
+  ORDER_READY
+  ORDER_DELIVERED
+  ORDER_CANCELLED
+  PROMOTION
+  LOYALTY_POINTS
+  REVIEW_REQUEST
+  SYSTEM
+}
+
+enum OfferType {
+  FLASH_SALE
+  BUNDLE
+  BOGO
+  DISCOUNT
+  FREE_DELIVERY
+}
+
+enum DiscountType {
+  PERCENTAGE
+  FIXED_AMOUNT
+}
+
+enum ExpenseCategory {
+  RAW_MATERIALS
+  PACKAGING
+  DELIVERY
+  MARKETING
+  UTILITIES
+  RENT
+  SALARIES
+  EQUIPMENT
+  MAINTENANCE
+  INSURANCE
+  TAXES
+  OTHER
+}
+
+enum ExpenseFrequency {
+  DAILY
+  WEEKLY
+  MONTHLY
+  YEARLY
+}
+
+enum GoalType {
+  REVENUE
+  PROFIT
+  ORDERS
+}
+
+enum GoalPeriod {
+  DAILY
+  WEEKLY
+  MONTHLY
+  YEARLY
+}
+
+enum RecommendationType {
+  PRICING
+  INVENTORY
+  MARKETING
+  PRODUCT
+  CUSTOMER_RETENTION
+  COST_REDUCTION
+  PROMOTION
+  SUPPLIER
+  STAFFING
+}
+
+enum RecommendationPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum RecommendationStatus {
+  PENDING
+  REVIEWED
+  IMPLEMENTED
+  REJECTED
+}
+
 enum FollowUpTrigger {
-  AFTER_ORDER          // X jours après une commande
-  AFTER_PAYMENT        // X heures après un paiement
-  AFTER_DELIVERY       // X jours après une livraison
-  AFTER_FIRST_MESSAGE  // X jours après le 1er message
-  AFTER_LAST_MESSAGE   // X jours après le dernier message
-  INACTIVITY           // X jours d'inactivité
-  BIRTHDAY             // Jour d'anniversaire
-  CUSTOM               // Personnalisé
+  AFTER_ORDER
+  AFTER_PAYMENT
+  AFTER_DELIVERY
+  AFTER_FIRST_MESSAGE
+  AFTER_LAST_MESSAGE
+  INACTIVITY
+  BIRTHDAY
+  CUSTOM
 }
 
 enum MessageType {
@@ -449,8 +828,8 @@ enum FollowUpStatus {
 }
 
 enum MessageDirection {
-  INCOMING  // Message reçu
-  OUTGOING  // Message envoyé
+  INCOMING
+  OUTGOING
 }
 
 enum MessageStatus {
@@ -460,19 +839,20 @@ enum MessageStatus {
   READ
   FAILED
 }
+
 enum CustomerSegment {
-  PROSPECT      // Jamais commandé
-  NEW           // 1ère commande
-  REGULAR       // 2-5 commandes
-  VIP           // 5+ commandes ou >50k FCFA
-  INACTIVE      // Pas de commande depuis 30+ jours
-  BLOCKED       // Bloqué
+  PROSPECT
+  NEW
+  REGULAR
+  VIP
+  INACTIVE
+  BLOCKED
 }
 
 enum CartStatus {
-  TEMP      // Temporary / guest cart
-  SAVED     // Saved cart
-  FINALIZED // Converted to order
+  TEMP
+  SAVED
+  FINALIZED
 }
 
 enum OrderStatus {
@@ -494,21 +874,22 @@ enum RecipientType {
   PRIVATE
   GROUP
 }
+
 enum WhatsAppMessageType {
   TEXT
   IMAGE
   VIDEO
   STATUS
 }
+
 enum MatchType {
-  EXACT       // Correspondance exacte (ex: "prix")
-  CONTAINS    // Contient le mot (ex: "quel est le prix")
-  STARTS_WITH // Commence par (ex: "prix...")
-  ENDS_WITH   // Finit par (ex: "...prix")
-  REGEX       // Expression régulière
+  EXACT
+  CONTAINS
+  STARTS_WITH
+  ENDS_WITH
+  REGEX
 }
 
-// Media des produits
 enum MediaType {
   IMAGE
   VIDEO
