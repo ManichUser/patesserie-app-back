@@ -18,25 +18,46 @@ import { FinancialGoalsModule } from './financial-goals/financial-goals.module';
 import { BusinessRecommendationsModule } from './business-recommendations/business-recommendations.module';
 import { DailySnapshotsModule } from './daily-snapshots/daily-snapshots.module';
 import { SpecialOffersModule } from './special-offers/special-offers.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 
 @Module({
-  imports: [AuthModule,
-    ConfigModule.forRoot({
-      isGlobal: true, 
-    }),
-    UsersModule, ProductsModule, OrdersModule,
-    CartModule, WhatsappModule,
-    CloudinaryModule, PrismaModule,
-    AuthModule,
-    FavoritesModule,
-    CategoriesModule,
-    SalesModule,
-    ExpensesModule,
-    FinancialGoalsModule,
-    BusinessRecommendationsModule,
-    DailySnapshotsModule,
-    SpecialOffersModule,
+  imports: [
+      // Configuration
+      ConfigModule.forRoot({
+        isGlobal: true,
+      }),
+  
+      // Scheduler pour les crons
+      ScheduleModule.forRoot(),
+  
+      // Database
+      PrismaModule,
+  
+      // Auth & Users
+      AuthModule,
+      UsersModule,
+  
+      // E-commerce
+      ProductsModule,
+      CategoriesModule,
+      OrdersModule,
+      CartModule,
+      FavoritesModule,
+
+  
+      // Communication
+
+      WhatsappModule,
+  
+      // 🔥 Business Management
+      SalesModule,
+      ExpensesModule,
+      FinancialGoalsModule,
+      BusinessRecommendationsModule,
+      DailySnapshotsModule,
+      SpecialOffersModule,
+      CloudinaryModule,
   ],
   controllers: [AppController],
   providers: [AppService],

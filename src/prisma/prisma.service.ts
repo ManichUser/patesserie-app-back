@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaClient } from '../generated/prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
-import { Role, CartStatus } from 'src/generated/prisma/enums';
+import { Role } from 'src/generated/prisma/enums';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
